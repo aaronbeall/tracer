@@ -112,7 +112,7 @@ function App() {
 
   const viewTags = selectedTags.length === 0 ? availableTags : selectedTags; // Pass all tags to the view when 'All' is selected
 
-  const sortedDataPoints = [...filteredDataPoints].sort((a, b) => b.timestamp - a.timestamp); // Sort data points
+  const sortedDataPoints = [...filteredDataPoints].sort((a, b) => a.timestamp - b.timestamp); // Sort data points in ascending order by timestamp
 
   return (
     <div className="container">
@@ -122,7 +122,7 @@ function App() {
             <img src={logo} alt="Tracer Logo" className="header-logo w-8 h-8" />
             <h1 className="title text-2xl font-bold">Tracer</h1>
           </div>
-          <p className="header-description text-sm text-muted-foreground">Track and visualize your tagged data points</p>
+          <p className="header-description text-sm text-muted-foreground">Track and visualize your tagged data</p>
         </div>
       </header>
       
