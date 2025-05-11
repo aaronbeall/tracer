@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -25,6 +25,7 @@ import TimelineView from './components/TimelineView';
 import { Badge } from '@/components/ui/badge';
 import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 
 ChartJS.register(
   CategoryScale,
@@ -39,10 +40,11 @@ ChartJS.register(
 function App() {
   const navigate = useNavigate(); // Moved inside the App component to ensure it is used within the Router context
 
-  const [input, setInput] = useState('');
   const [dataPoints, setDataPoints] = useState<DataPoint[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [input, setInput] = useState<string>('');
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -114,6 +116,11 @@ function App() {
 
   const sortedDataPoints = [...filteredDataPoints].sort((a, b) => a.timestamp - b.timestamp); // Sort data points in ascending order by timestamp
 
+  const filteredSuggestions = useMemo(() => {
+    const tagPart = input.slice(1).toLowerCase();
+    return availableTags.filter((tag) => tag.toLowerCase().includes(tagPart));
+  }, [input, availableTags]);
+
   return (
     <div className="container">
       <header className="header">
@@ -130,14 +137,34 @@ function App() {
         <div className="flex flex-col gap-4">
           <div>
             <label className="label">Add new data point</label>
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Enter data with #tag value (e.g., #scalps 450)"
-              onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
-            />
+            <div>
+              <Command className='rounded-lg border'>
+                <CommandInput
+                  value={input}
+                  onValueChange={search => setInput(search)}
+                  placeholder="Enter data with #tag value (e.g., #scalps 450)"
+                  onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+                  onFocus={() => setIsInputFocused(true)}
+                  onBlur={() => setIsInputFocused(false)}
+                />
+                {isInputFocused && (
+                  <CommandList>
+                    <CommandGroup>
+                      {filteredSuggestions.map((suggestion) => (
+                        <CommandItem
+                          key={suggestion}
+                          onSelect={() => setInput(`#${suggestion} `)}
+                        >
+                          #{suggestion}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                )}
+              </Command>
+            </div>
           </div>
-          <Button onClick={handleSubmit}>
+          <Button onClick={handleSubmit} disabled={!input}>
             Add Data Point
           </Button>
         </div>
