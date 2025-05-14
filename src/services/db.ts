@@ -43,9 +43,8 @@ class DatabaseService {
     });
   }
 
-  async addDataPoint(series: string, value: number | string) {
+  async addDataPoint(series: string, value: number | string, timestamp: number = Date.now()) {
     if (!this.db) await this.init();
-    const timestamp = Date.now();
     const datapoint = {
       series,
       value,

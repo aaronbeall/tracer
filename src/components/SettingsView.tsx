@@ -10,12 +10,15 @@ import { Select, SelectTrigger, SelectContent, SelectItem } from '@/components/u
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import type { DateRange, SelectRangeEventHandler } from 'react-day-picker';
 import { Table, TableHead, TableRow, TableHeader, TableBody, TableCell } from '@/components/ui/table';
+import { Slider } from '@/components/ui/slider';
+import type { DataPoint } from '../services/db';
 
 const SettingsView: React.FC = () => {
   const navigate = useNavigate();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedSeries, setSelectedSeries] = useState('');
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
+  const [frequency, setFrequency] = useState(1);
 
   const handleDateChange: SelectRangeEventHandler = (range) => {
     if (range) {
@@ -35,15 +38,63 @@ const SettingsView: React.FC = () => {
     }
   };
 
-  const handleGenerateData = () => {
+  const handleGenerateData = async () => {
     if (!selectedSeries || !dateRange.from || !dateRange.to) {
       toast.error('Please select a series and a valid date range.');
       return;
     }
 
-    // Logic to generate random data
-    console.log(`Generating data for ${selectedSeries} from ${dateRange.from} to ${dateRange.to}`);
-    toast.success('Dummy data generated successfully!');
+    const data: Omit<DataPoint, "id">[] = [];
+    const startDate = new Date(dateRange.from);
+    const endDate = new Date(dateRange.to);
+    const days = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+    const totalEntries = Math.round(days * frequency);
+    const possibleMoods = ['Happy', 'Sad', 'Excited', 'Angry', 'Relaxed'];
+    const possibleExercises = ['Running', 'Cycling', 'Swimming', 'Yoga', 'Weightlifting'];
+
+    for (let i = 0; i < totalEntries; i++) {
+      const date = new Date(startDate.getTime() + (i * (1000 * 60 * 60 * 24)) / frequency);
+      let value;
+
+      switch (selectedSeries) {
+        case 'weight':
+          value = parseFloat((Math.random() * 20 + 60).toFixed(1)); // Weight between 60-80 kg
+          break;
+        case 'sales':
+          value = Math.floor(Math.random() * 500 + 100); // Sales between 100-600
+          break;
+        case 'expenses':
+          value = Math.floor(Math.random() * 200 + 50); // Expenses between 50-250
+          break;
+        case 'mood':
+          value = possibleMoods[Math.floor(Math.random() * possibleMoods.length)]; // Random mood
+          break;
+        case 'exercise':
+          value = possibleExercises[Math.floor(Math.random() * possibleExercises.length)]; // Random exercise
+          break;
+        default:
+          value = 0;
+      }
+
+      data.push({
+        series: selectedSeries,
+        value,
+        timestamp: date.getTime(),
+      });
+    }
+
+    console.log('Generated Data:', data);
+    
+    try {
+      for (const { series, value, timestamp } of data) {
+        await db.addDataPoint(series, value, timestamp);
+      }
+      toast.success('Dummy data generated successfully!');
+    } catch (error) {
+      toast.error('Failed to save the generated data. Please try again.');
+      console.error('Failed to save the generated data:', error);
+    }
+
     setIsDialogOpen(false);
   };
 
@@ -87,8 +138,8 @@ const SettingsView: React.FC = () => {
           Delete Local Database
         </Button>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} modal>
+          <DialogContent onInteractOutside={e => e.preventDefault()}>
             <DialogTitle>Add Dummy Data</DialogTitle>
             <DialogDescription>Select a series and date range to generate random data.</DialogDescription>
             <div className="mb-4">
@@ -99,11 +150,33 @@ const SettingsView: React.FC = () => {
                   <SelectItem value="sales">Sales</SelectItem>
                   <SelectItem value="expenses">Expenses</SelectItem>
                   <SelectItem value="mood">Mood</SelectItem>
+                  <SelectItem value="exercise">Exercise</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="mb-4">
               <DateRangePicker selectedDate={dateRange} onDateChange={handleDateChange} />
+            </div>
+            <div className="mb-4">
+              <label htmlFor="frequency-slider" className="block text-sm font-medium text-gray-700">
+                Frequency (per day)
+              </label>
+              <Slider
+                id="frequency-slider"
+                value={[frequency]}
+                onValueChange={(value) => setFrequency(value[0])}
+                min={0.1}
+                max={10}
+                step={0.1}
+                className="mt-2"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                {frequency === 1
+                  ? 'Once per day'
+                  : frequency < 1
+                  ? `Every ${Math.round(1 / frequency)} days`
+                  : `${Math.round(frequency)} times a day`}
+              </p>
             </div>
             <Button 
               variant="default" 
