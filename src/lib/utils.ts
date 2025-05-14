@@ -8,3 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 export function getCurrentDate(): string {
   return new Date().toISOString().slice(0, 10); // Format as 'YYYY-MM-DD'
 }
+
+export const isNumeric = (value: string): boolean => {
+  return !isNaN(Number(value));
+};

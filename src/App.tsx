@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -25,7 +25,9 @@ import TimelineView from './components/TimelineView';
 import { Badge } from '@/components/ui/badge';
 import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Autocomplete } from '@/components/ui/autocomplete';
+import { PlusIcon } from 'lucide-react';
+import { isNumeric } from '@/lib/utils';
 
 ChartJS.register(
   CategoryScale,
@@ -43,8 +45,8 @@ function App() {
   const [dataPoints, setDataPoints] = useState<DataPoint[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
-  const [input, setInput] = useState<string>('');
-  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [tagInput, setTagInput] = useState<string>(''); // Separate state for tag input
+  const [valueInput, setValueInput] = useState<string>(''); // Separate state for value input
 
   useEffect(() => {
     loadData();
@@ -60,12 +62,11 @@ function App() {
   };
 
   const handleSubmit = async () => {
-    const match = input.match(/#(\w+)\s+(.+)/);
-    if (match) {
-      const [, tag, value] = match;
-      const numericValue = !isNaN(Number(value)) ? Number(value) : value;
-      await db.addDataPoint(tag, numericValue);
-      setInput('');
+    if (tagInput && valueInput) {
+      const numericValue = isNumeric(valueInput) ? Number(valueInput) : valueInput;
+      await db.addDataPoint(tagInput, numericValue);
+      setTagInput('');
+      setValueInput('');
       loadData();
     }
   };
@@ -116,11 +117,6 @@ function App() {
 
   const sortedDataPoints = [...filteredDataPoints].sort((a, b) => a.timestamp - b.timestamp); // Sort data points in ascending order by timestamp
 
-  const filteredSuggestions = useMemo(() => {
-    const tagPart = input.slice(1).toLowerCase();
-    return availableTags.filter((tag) => tag.toLowerCase().includes(tagPart));
-  }, [input, availableTags]);
-
   return (
     <div className="container">
       <header className="header">
@@ -134,38 +130,22 @@ function App() {
       </header>
       
       <Card className="p-6">
-        <div className="flex flex-col gap-4">
-          <div>
-            <label className="label">Add new data point</label>
-            <div>
-              <Command className='rounded-lg border'>
-                <CommandInput
-                  value={input}
-                  onValueChange={search => setInput(search)}
-                  placeholder="Enter data with #tag value (e.g., #scalps 450)"
-                  onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                  onFocus={() => setIsInputFocused(true)}
-                  onBlur={() => setIsInputFocused(false)}
-                />
-                {isInputFocused && (
-                  <CommandList>
-                    <CommandGroup>
-                      {filteredSuggestions.map((suggestion) => (
-                        <CommandItem
-                          key={suggestion}
-                          onSelect={() => setInput(`#${suggestion} `)}
-                        >
-                          #{suggestion}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                )}
-              </Command>
-            </div>
-          </div>
-          <Button onClick={handleSubmit} disabled={!input}>
-            Add Data Point
+        <div className="flex items-center gap-4">
+          <Autocomplete
+            options={availableTags}
+            value={tagInput}
+            onChange={setTagInput}
+            placeholder="Select or enter a tag"
+            className="flex-1"
+          />
+          <Input
+            value={valueInput}
+            onChange={(e) => setValueInput(e.target.value)}
+            placeholder="Enter value"
+            className="flex-1"
+          />
+          <Button onClick={handleSubmit} disabled={!tagInput || !valueInput} variant="default">
+            <PlusIcon />
           </Button>
         </div>
       </Card>
