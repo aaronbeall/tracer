@@ -133,13 +133,15 @@ function App() {
 
   return (
     <div className="container">
-      <header className="header">
-        <div className="header-content">
-          <div className="header-left flex items-center gap-4">
-            <img src={logo} alt="Tracer Logo" className="header-logo w-8 h-8" />
-            <h1 className="title text-2xl font-bold">Tracer</h1>
+      <header className="py-4 border-b border-muted">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <img src={logo} alt="Tracer Logo" className="w-10 h-10" />
+            <div>
+              <h1 className="text-2xl font-bold">Tracer</h1>
+              <p className="text-sm text-muted-foreground">Track and visualize your series data</p>
+            </div>
           </div>
-          <p className="header-description text-sm text-muted-foreground">Track and visualize your series data</p>
         </div>
       </header>
       
@@ -167,7 +169,6 @@ function App() {
 
       <Card className="p-6 mt-6">
         <div className="flex flex-col gap-2">
-          <label className="label">Select series to display</label>
           <div className="flex flex-wrap gap-2">
             <Badge
               key="all"
