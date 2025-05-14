@@ -22,3 +22,16 @@ export const parseTextValue = (value: string): number | string => {
   // If not, return the original string
   return value;
 }
+
+export function chooseFile(accept: string): Promise<File | null> {
+  return new Promise((resolve) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = accept;
+    input.onchange = () => {
+      const file = input.files ? input.files[0] : null;
+      resolve(file);
+    };
+    input.click();
+  });
+}
