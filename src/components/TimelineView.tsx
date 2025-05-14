@@ -2,12 +2,12 @@ import type { DataPoint } from '@/services/db';
 
 interface TimelineViewProps {
   dataPoints: DataPoint[];
-  selectedTags: string[];
+  selectedSeries: string[];
 }
 
-const TimelineView: React.FC<TimelineViewProps> = ({ dataPoints, selectedTags }) => {
+const TimelineView: React.FC<TimelineViewProps> = ({ dataPoints, selectedSeries }) => {
   const filteredPoints = dataPoints
-    .filter((p) => selectedTags.includes(p.tag))
+    .filter((p) => selectedSeries.includes(p.series))
     .sort((a, b) => a.timestamp - b.timestamp);
 
   return (
@@ -19,7 +19,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({ dataPoints, selectedTags })
             <div className="timeline-date">
               {new Date(point.timestamp).toLocaleString()}
             </div>
-            <div className="timeline-tag">{point.tag}</div>
+            <div className="timeline-series">{point.series}</div>
             <div className="timeline-value">{point.value}</div>
           </div>
         </div>

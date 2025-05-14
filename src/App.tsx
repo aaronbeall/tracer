@@ -43,9 +43,9 @@ function App() {
   const navigate = useNavigate(); // Moved inside the App component to ensure it is used within the Router context
 
   const [dataPoints, setDataPoints] = useState<DataPoint[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [availableTags, setAvailableTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState<string>(''); // Separate state for tag input
+  const [selectedSeries, setSelectedSeries] = useState<string[]>([]);
+  const [availableSeries, setAvailableSeries] = useState<string[]>([]);
+  const [seriesInput, setSeriesInput] = useState<string>('');
   const [valueInput, setValueInput] = useState<string>(''); // Separate state for value input
 
   useEffect(() => {
@@ -56,16 +56,16 @@ function App() {
     const points = await db.getAllDataPoints();
     console.log('Fetched data points:', points); // Debug log
     setDataPoints(points);
-    const tags = Array.from(new Set(points.map((p) => p.tag)));
-    console.log('Available tags:', tags); // Debug log
-    setAvailableTags(tags);
+    const series = Array.from(new Set(points.map((p) => p.series)));
+    console.log('Available series:', series); // Debug log
+    setAvailableSeries(series);
   };
 
   const handleSubmit = async () => {
-    if (tagInput && valueInput) {
+    if (seriesInput && valueInput) {
       const numericValue = isNumeric(valueInput) ? Number(valueInput) : valueInput;
-      await db.addDataPoint(tagInput, numericValue);
-      setTagInput('');
+      await db.addDataPoint(seriesInput, numericValue);
+      setSeriesInput('');
       setValueInput('');
       loadData();
     }
@@ -82,9 +82,9 @@ function App() {
           dataPoint.id === id ? { ...dataPoint, ...updatedData } : dataPoint
         );
 
-        // Update available tags
-        const updatedTags = Array.from(new Set(updatedDataPoints.map((p) => p.tag)));
-        setAvailableTags(updatedTags);
+        // Update available series
+        const updatedSeries = Array.from(new Set(updatedDataPoints.map((p) => p.series)));
+        setAvailableSeries(updatedSeries);
 
         return updatedDataPoints;
       });
@@ -109,11 +109,20 @@ function App() {
     }
   };
 
-  const filteredDataPoints = selectedTags.length === 0
-    ? dataPoints // Show all data points when 'All' is selected
-    : dataPoints.filter((p) => selectedTags.includes(p.tag));
+  const handleValueInputKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && valueInput) {
+      const numericValue = isNumeric(valueInput) ? Number(valueInput) : valueInput;
+      await db.addDataPoint(seriesInput, numericValue);
+      setValueInput('');
+      loadData();
+    }
+  };
 
-  const viewTags = selectedTags.length === 0 ? availableTags : selectedTags; // Pass all tags to the view when 'All' is selected
+  const filteredDataPoints = selectedSeries.length === 0
+    ? dataPoints // Show all data points when 'All' is selected
+    : dataPoints.filter((p) => selectedSeries.includes(p.series));
+
+  const viewSeries = selectedSeries.length === 0 ? availableSeries : selectedSeries; // Pass all series to the view when 'All' is selected
 
   const sortedDataPoints = [...filteredDataPoints].sort((a, b) => a.timestamp - b.timestamp); // Sort data points in ascending order by timestamp
 
@@ -125,26 +134,27 @@ function App() {
             <img src={logo} alt="Tracer Logo" className="header-logo w-8 h-8" />
             <h1 className="title text-2xl font-bold">Tracer</h1>
           </div>
-          <p className="header-description text-sm text-muted-foreground">Track and visualize your tagged data</p>
+          <p className="header-description text-sm text-muted-foreground">Track and visualize your series data</p>
         </div>
       </header>
       
       <Card className="p-6">
         <div className="flex items-center gap-4">
           <Autocomplete
-            options={availableTags}
-            value={tagInput}
-            onChange={setTagInput}
-            placeholder="Select or enter a tag"
+            options={availableSeries}
+            value={seriesInput}
+            onChange={setSeriesInput}
+            placeholder="Select or enter a series"
             className="flex-1"
           />
           <Input
             value={valueInput}
             onChange={(e) => setValueInput(e.target.value)}
+            onKeyDown={handleValueInputKeyDown} // Add keydown handler for Enter
             placeholder="Enter value"
             className="flex-1"
           />
-          <Button onClick={handleSubmit} disabled={!tagInput || !valueInput} variant="default">
+          <Button onClick={handleSubmit} disabled={!seriesInput || !valueInput} variant="default">
             <PlusIcon />
           </Button>
         </div>
@@ -152,30 +162,30 @@ function App() {
 
       <Card className="p-6 mt-6">
         <div className="flex flex-col gap-2">
-          <label className="label">Select tag to display</label>
+          <label className="label">Select series to display</label>
           <div className="flex flex-wrap gap-2">
             <Badge
               key="all"
-              variant={selectedTags.length === 0 ? 'default' : 'outline'}
-              onClick={() => setSelectedTags([])} // Clear selectedTags when 'All' is clicked
+              variant={selectedSeries.length === 0 ? 'default' : 'outline'}
+              onClick={() => setSelectedSeries([])} // Clear selectedSeries when 'All' is clicked
               className="cursor-pointer"
             >
               All
             </Badge>
-            {availableTags.map((tag) => (
+            {availableSeries.map((series) => (
               <Badge
-                key={tag}
-                variant={selectedTags.includes(tag) ? 'default' : 'outline'}
+                key={series}
+                variant={selectedSeries.includes(series) ? 'default' : 'outline'}
                 onClick={() => {
-                  setSelectedTags((prev) =>
-                    prev.includes(tag)
-                      ? prev.filter((t) => t !== tag)
-                      : [...prev, tag]
+                  setSelectedSeries((prev) =>
+                    prev.includes(series)
+                      ? prev.filter((s) => s !== series)
+                      : [...prev, series]
                   );
                 }}
                 className="cursor-pointer"
               >
-                {tag}
+                {series}
               </Badge>
             ))}
           </div>
@@ -222,10 +232,10 @@ function App() {
           </TabsList>
           <div className="rounded-lg border bg-card p-6">
             <Routes>
-              <Route path="/chart" element={<ChartView dataPoints={sortedDataPoints} selectedTags={viewTags} />} />
-              <Route path="/table" element={<TableView dataPoints={sortedDataPoints} onEdit={handleEdit} onDelete={handleDelete} availableTags={availableTags} />} />
-              <Route path="/calendar" element={<CalendarView dataPoints={sortedDataPoints} selectedTags={viewTags} />} />
-              <Route path="/timeline" element={<TimelineView dataPoints={sortedDataPoints} selectedTags={viewTags} />} />
+              <Route path="/chart" element={<ChartView dataPoints={sortedDataPoints} selectedSeries={viewSeries} />} />
+              <Route path="/table" element={<TableView dataPoints={sortedDataPoints} onEdit={handleEdit} onDelete={handleDelete} availableSeries={availableSeries} />} />
+              <Route path="/calendar" element={<CalendarView dataPoints={sortedDataPoints} selectedSeries={viewSeries} />} />
+              <Route path="/timeline" element={<TimelineView dataPoints={sortedDataPoints} selectedSeries={viewSeries} />} />
               <Route path="*" element={<Navigate to="/chart" replace />} />
             </Routes>
           </div>

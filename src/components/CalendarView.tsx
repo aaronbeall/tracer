@@ -2,12 +2,12 @@ import type { DataPoint } from '@/services/db';
 
 interface CalendarViewProps {
   dataPoints: DataPoint[];
-  selectedTags: string[];
+  selectedSeries: string[];
 }
 
-const CalendarView: React.FC<CalendarViewProps> = ({ dataPoints, selectedTags }) => {
-  const filteredPoints = dataPoints.filter((p) => selectedTags.includes(p.tag));
-  const pointsByDate: Record<string, DataPoint[]> = filteredPoints.reduce((acc, point) => {
+const CalendarView: React.FC<CalendarViewProps> = ({ dataPoints, selectedSeries }) => {
+  const filteredPoints = dataPoints.filter((p) => selectedSeries.includes(p.series));
+  const pointsByDate: Record<string, DataPoint[]> = filteredPoints.reduce((acc: Record<string, DataPoint[]>, point) => {
     const date = new Date(point.timestamp).toLocaleDateString();
     if (!acc[date]) acc[date] = [];
     acc[date].push(point);
@@ -22,7 +22,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ dataPoints, selectedTags })
           <div className="calendar-events">
             {points.map((point) => (
               <div key={point.id} className="calendar-event">
-                <span className="event-tag">{point.tag}</span>
+                <span className="event-series">{point.series}</span>
                 <span className="event-value">{point.value}</span>
               </div>
             ))}

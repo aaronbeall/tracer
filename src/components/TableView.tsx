@@ -10,10 +10,10 @@ interface TableViewProps {
   dataPoints: DataPoint[];
   onEdit: (id: number, updatedData: Partial<DataPoint>) => void;
   onDelete: (id: number) => void;
-  availableTags: string[];
+  availableSeries: string[];
 }
 
-const TableView: React.FC<TableViewProps> = ({ dataPoints, onEdit, onDelete, availableTags }) => {
+const TableView: React.FC<TableViewProps> = ({ dataPoints, onEdit, onDelete, availableSeries }) => {
   const [rowToDelete, setRowToDelete] = useState<DataPoint | null>(null);
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'timestamp', desc: true },
@@ -55,18 +55,18 @@ const TableView: React.FC<TableViewProps> = ({ dataPoints, onEdit, onDelete, ava
         />
       ),
     }),
-    columnHelper.accessor('tag', {
-      header: 'Tag',
+    columnHelper.accessor('series', {
+      header: 'Series',
       cell: (info) => (
         <>
-          <datalist id={`tags-${info.row.index}`}>
-            {availableTags.map((tag) => (
-              <option key={tag} value={tag} />
+          <datalist id={`series-${info.row.index}`}>
+            {availableSeries.map((series) => (
+              <option key={series} value={series} />
             ))}
           </datalist>
           <input
             type="text"
-            list={`tags-${info.row.index}`}
+            list={`series-${info.row.index}`}
             defaultValue={info.getValue()}
             onBlur={(e) => handleCellEdit(info.row.index, info.column.id, e.target.value)}
           />

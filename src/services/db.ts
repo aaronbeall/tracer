@@ -1,21 +1,29 @@
 import { openDB } from 'idb';
 import type { IDBPDatabase } from 'idb';
-// Removed unused import
-// import { getCurrentDate } from '@/lib/utils';
 
 export interface DataPoint {
   id: number;
-  tag: string;
+  series: string;
   value: number | string;
   timestamp: number;
-  // Removed 'date' property as it can be derived from 'timestamp'
+}
+
+export interface DataSeries {
+  id: number;
+  name: string;
+  color: string;
+  unit?: string;
+  description?: string;
+  type?: 'numeric' | 'text';
+  createdAt: number;
+  updatedAt: number;
 }
 
 interface TracerDB {
   datapoints: {
     key: number;
     value: DataPoint;
-    indexes: { 'by-tag': string; 'by-timestamp': number }; // Removed 'by-date' index
+    indexes: { 'by-series': string; 'by-timestamp': number };
   };
 }
 
@@ -29,32 +37,24 @@ class DatabaseService {
           keyPath: 'id',
           autoIncrement: true,
         });
-        store.createIndex('by-tag', 'tag');
+        store.createIndex('by-series', 'series');
         store.createIndex('by-timestamp', 'timestamp');
-        // Removed 'by-date' index
       },
     });
   }
 
-  async addDataPoint(tag: string, value: number | string) {
+  async addDataPoint(series: string, value: number | string) {
     if (!this.db) await this.init();
     const timestamp = Date.now();
     const datapoint = {
-      tag,
+      series,
       value,
       timestamp,
     };
     return this.db!.add('datapoints', datapoint);
   }
 
-  async getDataPointsByTag(tag: string) {
-    if (!this.db) await this.init();
-    const tx = this.db!.transaction('datapoints', 'readonly');
-    const index = tx.store.index('by-tag');
-    return index.getAll(tag);
-  }
-
-  async getAllDataPoints() {
+  async getAllDataPoints(): Promise<DataPoint[]> {
     if (!this.db) await this.init();
     return this.db!.getAll('datapoints');
   }
@@ -71,6 +71,14 @@ class DatabaseService {
   async deleteDataPoint(id: number) {
     if (!this.db) await this.init();
     await this.db!.delete('datapoints', id);
+  }
+
+  async deleteDatabase() {
+    if (this.db) {
+      this.db.close();
+      this.db = null;
+    }
+    await indexedDB.deleteDatabase('tracer-db');
   }
 }
 

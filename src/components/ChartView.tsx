@@ -5,7 +5,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 interface ChartViewProps {
   dataPoints: DataPoint[];
-  selectedTags: string[];
+  selectedSeries: string[];
 }
 
 type Interval = 'Day' | 'Week' | 'Month' | 'Year';
@@ -37,13 +37,13 @@ const groupDataByInterval = (data: DataPoint[], interval: Interval) => {
       groupedData[key] = { date: key };
     }
 
-    groupedData[key][point.tag] = (Number(groupedData[key][point.tag]) || 0) + Number(point.value);
+    groupedData[key][point.series] = (Number(groupedData[key][point.series]) || 0) + Number(point.value);
   });
 
   return Object.values(groupedData);
 };
 
-const ChartView: React.FC<ChartViewProps> = ({ dataPoints, selectedTags }) => {
+const ChartView: React.FC<ChartViewProps> = ({ dataPoints, selectedSeries }) => {
   const [interval, setInterval] = useState<Interval>('Day');
 
   const transformedData = groupDataByInterval(dataPoints, interval);
@@ -66,12 +66,12 @@ const ChartView: React.FC<ChartViewProps> = ({ dataPoints, selectedTags }) => {
           <YAxis stroke="hsl(var(--muted-foreground))" />
           <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--popover))', color: 'hsl(var(--popover-foreground))' }} />
           <Legend wrapperStyle={{ color: 'hsl(var(--foreground))' }} />
-          {selectedTags.map((tag) => (
+          {selectedSeries.map((series) => (
             <Line
-              key={tag}
+              key={series}
               type="monotone"
-              dataKey={tag}
-              name={tag}
+              dataKey={series}
+              name={series}
               stroke={`hsl(${Math.random() * 360}, 70%, 50%)`}
               dot={false}
             />
