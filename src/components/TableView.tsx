@@ -39,6 +39,7 @@ const TableView: React.FC<TableViewProps> = ({ dataPoints, onEdit, onDelete, ava
     if (id !== undefined) {
       onDelete(id);
     }
+    setRowToDelete(null);
   };
 
   const columns = [

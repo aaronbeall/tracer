@@ -27,7 +27,7 @@ import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Autocomplete } from '@/components/ui/autocomplete';
 import { PlusIcon } from 'lucide-react';
-import { isNumericText } from '@/lib/utils';
+import { isNumericText, parseTextValue } from '@/lib/utils';
 
 ChartJS.register(
   CategoryScale,
@@ -61,14 +61,20 @@ function App() {
     setAvailableSeries(series);
   };
 
-  const handleSubmit = async () => {
+  const processValues = async () => {
     if (seriesInput && valueInput) {
-      const numericValue = isNumericText(valueInput) ? Number(valueInput) : valueInput;
-      await db.addDataPoint(seriesInput, numericValue);
-      setSeriesInput('');
-      setValueInput('');
-      loadData();
+      const values = valueInput.split(',').map((v) => v.trim()).map(parseTextValue);
+      for (const value of values) {
+        await db.addDataPoint(seriesInput, value);
+      }
     }
+  };
+
+  const handleSubmit = async () => {
+    await processValues();
+    setSeriesInput('');
+    setValueInput('');
+    loadData();
   };
 
   const handleEdit = async (id: number, updatedData: Partial<DataPoint>) => {
@@ -110,9 +116,8 @@ function App() {
   };
 
   const handleValueInputKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && valueInput) {
-      const numericValue = isNumericText(valueInput) ? Number(valueInput) : valueInput;
-      await db.addDataPoint(seriesInput, numericValue);
+    if (e.key === 'Enter') {
+      await processValues();
       setValueInput('');
       loadData();
     }
@@ -144,14 +149,14 @@ function App() {
             options={availableSeries}
             value={seriesInput}
             onChange={setSeriesInput}
-            placeholder="Select or enter a series"
+            placeholder="Enter a series"
             className="flex-1"
           />
           <Input
             value={valueInput}
             onChange={(e) => setValueInput(e.target.value)}
             onKeyDown={handleValueInputKeyDown} // Add keydown handler for Enter
-            placeholder="Enter value"
+            placeholder="Enter value(s), separated by commas"
             className="flex-1"
           />
           <Button onClick={handleSubmit} disabled={!seriesInput || !valueInput} variant="default">

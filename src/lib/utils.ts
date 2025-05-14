@@ -13,3 +13,12 @@ export const isNumericText = (value: string): boolean => {
   // Strictly match numeric strings (e.g., "0", "123", "0.0", "123.456")
   return /^\d+(\.\d+)?$/.test(value.trim());
 };
+
+export const parseTextValue = (value: string): number | string => {
+  // Check if the value is a valid number
+  if (isNumericText(value)) {
+    return parseFloat(value);
+  }
+  // If not, return the original string
+  return value;
+}
