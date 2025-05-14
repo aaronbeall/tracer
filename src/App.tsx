@@ -27,7 +27,7 @@ import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Autocomplete } from '@/components/ui/autocomplete';
 import { PlusIcon } from 'lucide-react';
-import { isNumeric } from '@/lib/utils';
+import { isNumericText } from '@/lib/utils';
 
 ChartJS.register(
   CategoryScale,
@@ -63,7 +63,7 @@ function App() {
 
   const handleSubmit = async () => {
     if (seriesInput && valueInput) {
-      const numericValue = isNumeric(valueInput) ? Number(valueInput) : valueInput;
+      const numericValue = isNumericText(valueInput) ? Number(valueInput) : valueInput;
       await db.addDataPoint(seriesInput, numericValue);
       setSeriesInput('');
       setValueInput('');
@@ -111,7 +111,7 @@ function App() {
 
   const handleValueInputKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && valueInput) {
-      const numericValue = isNumeric(valueInput) ? Number(valueInput) : valueInput;
+      const numericValue = isNumericText(valueInput) ? Number(valueInput) : valueInput;
       await db.addDataPoint(seriesInput, numericValue);
       setValueInput('');
       loadData();

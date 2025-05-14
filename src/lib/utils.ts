@@ -9,6 +9,7 @@ export function getCurrentDate(): string {
   return new Date().toISOString().slice(0, 10); // Format as 'YYYY-MM-DD'
 }
 
-export const isNumeric = (value: string): boolean => {
-  return !isNaN(Number(value));
+export const isNumericText = (value: string): boolean => {
+  // Strictly match numeric strings (e.g., "0", "123", "0.0", "123.456")
+  return /^\d+(\.\d+)?$/.test(value.trim());
 };
