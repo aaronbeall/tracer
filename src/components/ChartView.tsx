@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { DataPoint } from '@/services/db';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import IntervalPicker from '@/components/ui/IntervalPicker';
 
 interface ChartViewProps {
   dataPoints: DataPoint[];
@@ -53,13 +53,7 @@ const ChartView: React.FC<ChartViewProps> = ({ dataPoints, selectedSeries }) => 
   return (
     <div className="chart-container">
       <div className="interval-toggle" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', border: '1px solid hsl(var(--border))', padding: '0.5rem', borderRadius: '0.25rem' }}>
-        <ToggleGroup type="single" value={interval} onValueChange={(value) => setInterval(value as Interval)}>
-          {['Day', 'Week', 'Month', 'Year'].map((int) => (
-            <ToggleGroupItem key={int} value={int} className={interval === int ? 'active' : ''}>
-              {int}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+        <IntervalPicker interval={interval} onIntervalChange={setInterval} />
       </div>
       <ResponsiveContainer width="100%" height={400}>
         <LineChart data={transformedData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
