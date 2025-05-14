@@ -28,6 +28,12 @@ import { toast } from 'sonner';
 import { Autocomplete } from '@/components/ui/autocomplete';
 import { PlusIcon } from 'lucide-react';
 import { isNumericText, parseTextValue } from '@/lib/utils';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
+import { Select, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select';
+import type { DateRange } from 'react-day-picker';
+
+type TimeFrame = 'All Time' | 'Past Week' | 'Past Month' | 'Past Year' | 'YTD' | 'Custom...';
 
 ChartJS.register(
   CategoryScale,
@@ -47,6 +53,8 @@ function App() {
   const [availableSeries, setAvailableSeries] = useState<string[]>([]);
   const [seriesInput, setSeriesInput] = useState<string>('');
   const [valueInput, setValueInput] = useState<string>(''); // Separate state for value input
+  const [timeFrame, setTimeFrame] = useState<TimeFrame>('All Time');
+  const [customRange, setCustomRange] = useState<DateRange | undefined>(undefined);
 
   useEffect(() => {
     loadData();
@@ -123,9 +131,40 @@ function App() {
     }
   };
 
-  const filteredDataPoints = selectedSeries.length === 0
-    ? dataPoints // Show all data points when 'All' is selected
-    : dataPoints.filter((p) => selectedSeries.includes(p.series));
+  const handleTimeFrameChange = (value: string) => {
+    if (['All Time', 'Past Week', 'Past Month', 'Past Year', 'YTD', 'Custom...'].includes(value)) {
+      setTimeFrame(value as TimeFrame);
+    }
+  };
+
+  const filterByTimeFrame = (data: DataPoint[]) => {
+    const now = new Date();
+    switch (timeFrame) {
+      case 'Past Week':
+        return data.filter((p) => new Date(p.timestamp) >= new Date(now.setDate(now.getDate() - 7)));
+      case 'Past Month':
+        return data.filter((p) => new Date(p.timestamp) >= new Date(now.setMonth(now.getMonth() - 1)));
+      case 'Past Year':
+        return data.filter((p) => new Date(p.timestamp) >= new Date(now.setFullYear(now.getFullYear() - 1)));
+      case 'YTD':
+        return data.filter((p) => new Date(p.timestamp) >= new Date(now.getFullYear(), 0, 1));
+      case 'Custom...':
+        if (customRange?.from && customRange?.to) {
+          return data.filter(
+            (p) => new Date(p.timestamp) >= customRange.from! && new Date(p.timestamp) <= customRange.to!
+          );
+        }
+        return data;
+      default:
+        return data;
+    }
+  };
+
+  const filteredDataPoints = filterByTimeFrame(
+    selectedSeries.length === 0
+      ? dataPoints // Show all data points when 'All' is selected
+      : dataPoints.filter((p) => selectedSeries.includes(p.series))
+  );
 
   const viewSeries = selectedSeries.length === 0 ? availableSeries : selectedSeries; // Pass all series to the view when 'All' is selected
 
@@ -166,34 +205,55 @@ function App() {
       </Card>
 
       <Card className="p-6 mt-6">
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap gap-2">
-            <Badge
-              key="all"
-              variant={selectedSeries.length === 0 ? 'default' : 'outline'}
-              onClick={() => setSelectedSeries([])} // Clear selectedSeries when 'All' is clicked
-              className="cursor-pointer"
-            >
-              All
-            </Badge>
-            {availableSeries.map((series) => (
+        <div className="flex items-center justify-between">
+            <div className="flex flex-wrap gap-2">
               <Badge
-                key={series}
-                variant={selectedSeries.includes(series) ? 'default' : 'outline'}
-                onClick={() => {
-                  setSelectedSeries((prev) =>
-                    prev.includes(series)
-                      ? prev.filter((s) => s !== series)
-                      : [...prev, series]
-                  );
-                }}
+                key="all"
+                variant={selectedSeries.length === 0 ? 'default' : 'outline'}
+                onClick={() => setSelectedSeries([])}
                 className="cursor-pointer"
               >
-                {series}
+                All
               </Badge>
-            ))}
+              {availableSeries.map((series) => (
+                <Badge
+                  key={series}
+                  variant={selectedSeries.includes(series) ? 'default' : 'outline'}
+                  onClick={() => {
+                    setSelectedSeries((prev) =>
+                      prev.includes(series)
+                        ? prev.filter((s) => s !== series)
+                        : [...prev, series]
+                    );
+                  }}
+                  className="cursor-pointer"
+                >
+                  {series}
+                </Badge>
+              ))}
+            </div>
+            <div className="flex items-center gap-4">
+              {timeFrame === 'Custom...' && (
+                <DateRangePicker
+                  selectedDate={customRange}
+                  onDateChange={(range: DateRange | undefined) => setCustomRange(range)}
+                />
+              )}
+              <Select value={timeFrame} onValueChange={(value) => handleTimeFrameChange(value)}>
+                <SelectTrigger className="border rounded px-2 py-1 text-sm">
+                  {timeFrame}
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All Time">All Time</SelectItem>
+                  <SelectItem value="Past Week">Past Week</SelectItem>
+                  <SelectItem value="Past Month">Past Month</SelectItem>
+                  <SelectItem value="Past Year">Past Year</SelectItem>
+                  <SelectItem value="YTD">YTD</SelectItem>
+                  <SelectItem value="Custom...">Custom...</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        </div>
       </Card>
 
       <Card className="p-6 mt-6">
