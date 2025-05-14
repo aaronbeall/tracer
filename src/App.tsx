@@ -129,8 +129,6 @@ function App() {
 
   const viewSeries = selectedSeries.length === 0 ? availableSeries : selectedSeries; // Pass all series to the view when 'All' is selected
 
-  const sortedDataPoints = [...filteredDataPoints].sort((a, b) => a.timestamp - b.timestamp); // Sort data points in ascending order by timestamp
-
   return (
     <div className="container">
       <header className="py-4 border-b border-muted">
@@ -238,10 +236,10 @@ function App() {
           </TabsList>
           <div className="rounded-lg border bg-card p-6">
             <Routes>
-              <Route path="/chart" element={<ChartView dataPoints={sortedDataPoints} selectedSeries={viewSeries} />} />
-              <Route path="/table" element={<TableView dataPoints={sortedDataPoints} onEdit={handleEdit} onDelete={handleDelete} availableSeries={availableSeries} />} />
-              <Route path="/calendar" element={<CalendarView dataPoints={sortedDataPoints} selectedSeries={viewSeries} />} />
-              <Route path="/timeline" element={<TimelineView dataPoints={sortedDataPoints} selectedSeries={viewSeries} />} />
+              <Route path="/chart" element={<ChartView dataPoints={filteredDataPoints} selectedSeries={viewSeries} />} />
+              <Route path="/table" element={<TableView dataPoints={filteredDataPoints} onEdit={handleEdit} onDelete={handleDelete} availableSeries={availableSeries} />} />
+              <Route path="/calendar" element={<CalendarView dataPoints={filteredDataPoints} selectedSeries={viewSeries} />} />
+              <Route path="/timeline" element={<TimelineView dataPoints={filteredDataPoints} selectedSeries={viewSeries} />} />
               <Route path="*" element={<Navigate to="/chart" replace />} />
             </Routes>
           </div>
