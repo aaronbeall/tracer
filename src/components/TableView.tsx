@@ -128,6 +128,7 @@ const TableView: React.FC<TableViewProps> = ({ dataPoints, onEdit, onDelete, ava
     data: dataPoints,
     columns,
     state: { sorting },
+    getRowId: (row) => row.id.toString(),
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
