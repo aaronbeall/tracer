@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -147,7 +147,7 @@ function App() {
     }
   };
 
-  const filterByTimeFrame = (data: DataPoint[]) => {
+  const filterByTimeFrame = useCallback((data: DataPoint[]) => {
     const now = new Date();
     switch (timeFrame) {
       case 'Past Week':
@@ -170,13 +170,13 @@ function App() {
       default:
         return data;
     }
-  };
+  }, [timeFrame, customRange]);
 
-  const filteredDataPoints = filterByTimeFrame(
+  const filteredDataPoints = useMemo(() => filterByTimeFrame(
     selectedSeries.length === 0
       ? dataPoints // Show all data points when 'All' is selected
       : dataPoints.filter((p) => selectedSeries.includes(p.series))
-  );
+  ), [dataPoints, selectedSeries, filterByTimeFrame]);
 
   const viewSeries = selectedSeries.length === 0 ? availableSeries : selectedSeries; // Pass all series to the view when 'All' is selected
 

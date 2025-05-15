@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { DataPoint } from '@/services/db';
 import IntervalPicker from '@/components/ui/IntervalPicker';
@@ -48,7 +48,7 @@ const groupDataByInterval = (data: DataPoint[], interval: Interval) => {
 const ChartView: React.FC<ChartViewProps> = ({ dataPoints, selectedSeries }) => {
   const [interval, setInterval] = useState<Interval>('Day');
 
-  const transformedData = groupDataByInterval(dataPoints, interval);
+  const transformedData = useMemo(() => groupDataByInterval(dataPoints, interval), [dataPoints, interval]);
 
   return (
     <div className="chart-container">
