@@ -1,9 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useDataStore } from '@/store/dataStore';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, X, MoreHorizontal, AlertCircle, Trash } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
@@ -72,6 +71,10 @@ const SeriesSettingsView: React.FC = () => {
     });
   };
 
+  const handleEmojiChange = (id: number, emoji: string | undefined) => {
+    updateEditedSeries(id, { emoji });
+  };
+
   return (
     <div style={{ padding: '20px' }}>
       <Button 
@@ -112,7 +115,7 @@ const SeriesSettingsView: React.FC = () => {
                 />
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button className="p-2" size="icon" variant="ghost">
+                    <Button className="p-2 text-2xl" size="icon" variant="ghost">
                       {currentSeries.emoji ? (
                         <span>{currentSeries.emoji}</span>
                       ) : (
@@ -120,9 +123,22 @@ const SeriesSettingsView: React.FC = () => {
                       )}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="p-0 w-full h-full">
+                  <PopoverContent className="p-0 w-full h-full bg-gray-950">
+                    {currentSeries.emoji && (
+                      <div className="p-2 border-b border-gray-200">
+                        <Button
+                          variant="destructive"
+                          className='w-full'
+                          size="sm"
+                          onClick={() => handleEmojiChange(currentSeries.id, undefined)}
+                        >
+                          <Trash/> Remove Emoji
+                        </Button>
+                      </div>
+                    )}
                     <Picker
-                      onEmojiSelect={(emoji: { native: string }) => updateEditedSeries(currentSeries.id, { emoji: emoji.native })}
+                      autoFocus
+                      onEmojiSelect={(emoji: { native: string }) => handleEmojiChange(currentSeries.id, emoji.native)}
                     />
                   </PopoverContent>
                 </Popover>

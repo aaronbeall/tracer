@@ -48,6 +48,7 @@
     "@shadcn/ui": "^0.0.4",
     "@tailwindcss/vite": "^4.1.6",
     "@tanstack/react-table": "^8.21.3",
+    "@types/emoji-mart": "^3.0.14",
     "@types/file-saver": "^2.0.7",
     "@types/tinycolor2": "^1.4.6",
     "chart.js": "^4.4.9",

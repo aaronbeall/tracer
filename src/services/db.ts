@@ -19,6 +19,7 @@ export interface DataSeries {
   createdAt: number;
   updatedAt: number;
   dataAddedAt?: number;
+  archived?: boolean;
 }
 
 interface TracerDB {
