@@ -12,11 +12,14 @@ import type { DataSeries } from '@/services/db';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import Picker from '@emoji-mart/react';
 import ColorSwatch from './ColorSwatch';
+import { Select, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select';
+import { formatDistanceToNow } from 'date-fns';
 
 const SeriesSettingsView: React.FC = () => {
   const { series, updateSeries, deleteSeries } = useDataStore();
   const [editedSeries, setEditedSeries] = useState<Partial<DataSeries>[]>([]); // Initialize as an empty array
   const navigate = useNavigate();
+  const [sortOption, setSortOption] = useState<'createdAt' | 'updatedAt' | 'dataAddedAt'>('createdAt');
 
   const displaySeries = useMemo(() => {
     return series.map((s) => {
@@ -39,6 +42,18 @@ const SeriesSettingsView: React.FC = () => {
       return { ...merged, error, isValid: !error };
     });
   }, [series, editedSeries]);
+
+  const sortedSeries = useMemo(() => {
+    return [...displaySeries].sort((a, b) => {
+      if (sortOption === 'createdAt') {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      } else if (sortOption === 'updatedAt') {
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      } else {
+        return new Date(b.dataAddedAt || 0).getTime() - new Date(a.dataAddedAt || 0).getTime();
+      }
+    });
+  }, [displaySeries, sortOption]);
 
   const handleSave = async (id: number) => {
     const edits = editedSeries.find((s) => s.id === id);
@@ -85,7 +100,20 @@ const SeriesSettingsView: React.FC = () => {
         <ArrowLeft size={16} />
         Back to Data View
       </Button>
-      {displaySeries.map((currentSeries) => {
+      <div className="mb-4 flex justify-end items-center gap-2">
+        <label htmlFor="sort-select" className="text-sm font-medium text-gray-700">Sort by:</label>
+        <Select value={sortOption} onValueChange={(value) => setSortOption(value as 'createdAt' | 'updatedAt' | 'dataAddedAt')}>
+          <SelectTrigger id="sort-select" className="w-48">
+            <span>{sortOption === 'createdAt' ? 'Created Date' : sortOption === 'updatedAt' ? 'Modified Date' : 'Last Data Added'}</span>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="createdAt">Created Date</SelectItem>
+            <SelectItem value="updatedAt">Modified Date</SelectItem>
+            <SelectItem value="dataAddedAt">Last Data Added</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      {sortedSeries.map((currentSeries) => {
         const hasEdits = Object.keys(editedSeries.find((e) => e.id === currentSeries.id) || {}).length > 1;
         return (
           <Card key={currentSeries.id} className="p-4 mb-4">
@@ -155,6 +183,38 @@ const SeriesSettingsView: React.FC = () => {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+              </div>
+              <div className="text-xs text-gray-500 mt-4 flex items-center space-x-2 border-t border-gray-200 pt-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p className="font-light">Created: <span className="text-gray-400">{formatDistanceToNow(new Date(currentSeries.createdAt), { addSuffix: true })}</span></p>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {new Date(currentSeries.createdAt).toLocaleString()}
+                  </TooltipContent>
+                </Tooltip>
+                <span className="text-gray-300">|</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p className="font-light">Modified: <span className="text-gray-400">{formatDistanceToNow(new Date(currentSeries.updatedAt), { addSuffix: true })}</span></p>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {new Date(currentSeries.updatedAt).toLocaleString()}
+                  </TooltipContent>
+                </Tooltip>
+                {currentSeries.dataAddedAt && (
+                  <>
+                    <span className="text-gray-300">|</span>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <p className="font-light">Data Added: <span className="text-gray-400">{formatDistanceToNow(new Date(currentSeries.dataAddedAt), { addSuffix: true })}</span></p>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {new Date(currentSeries.dataAddedAt).toLocaleString()}
+                      </TooltipContent>
+                    </Tooltip>
+                  </>
+                )}
               </div>
               {hasEdits && (
                 <div className="mt-2 -mx-4 -mb-4 p-4 bg-yellow-100 border-t border-yellow-300 rounded-b-xl">
