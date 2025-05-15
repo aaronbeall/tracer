@@ -5,9 +5,9 @@ import {
   LinearScale,
   PointElement,
   LineElement,
-  Title,
-  Tooltip,
-  Legend,
+  Title as ChartTitle,
+  Tooltip as ChartTooltip,
+  Legend as ChartLegend,
 } from 'chart.js';
 import type { DataPoint } from './services/db';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -37,6 +37,7 @@ import { isAfter, isBefore, startOfYear, subDays, subMonths, subYears } from 'da
 import { useDataStore, useSeriesByName } from '@/store/dataStore';
 import AboutDialog from './components/AboutDialog';
 import SeriesSettingsView from './components/SeriesSettingsView';
+import SeriesBadge from './components/SeriesBadge';
 
 type TimeFrame = 'All Time' | 'Past Week' | 'Past Month' | 'Past Year' | 'YTD' | 'Custom...';
 
@@ -45,9 +46,9 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
-  Title,
-  Tooltip,
-  Legend
+  ChartTitle,
+  ChartTooltip,
+  ChartLegend
 );
 
 function exportDataAsCSV(dataPoints: DataPoint[]) {
@@ -264,9 +265,10 @@ function App() {
                       All
                     </Badge>
                     {availableSeries.map((series) => (
-                      <Badge
+                      <SeriesBadge
                         key={series}
-                        variant={selectedSeries.includes(series) ? 'default' : 'outline'}
+                        series={seriesByName[series]}
+                        isSelected={selectedSeries.includes(series)}
                         onClick={() => {
                           setSelectedSeries((prev) =>
                             prev.includes(series)
@@ -274,21 +276,7 @@ function App() {
                               : [...prev, series]
                           );
                         }}
-                        className="cursor-pointer"
-                        style={
-                          selectedSeries.includes(series)
-                            ? {
-                                backgroundColor: seriesByName[series]?.color || 'black',
-                                color: 'white',
-                              }
-                            : {
-                                borderColor: seriesByName[series]?.color || 'black',
-                                color: seriesByName[series]?.color || 'black',
-                              }
-                        }
-                      >
-                        {series}
-                      </Badge>
+                      />
                     ))}
                     <Button
                         variant="ghost"

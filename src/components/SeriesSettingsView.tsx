@@ -94,9 +94,9 @@ const SeriesSettingsView: React.FC = () => {
     updateEditedSeries(id, { emoji });
   };
 
-  // Update the helper function to take the entire series object instead of separate parameters
   const isDescriptionShowing = (series: DataSeries) => {
-    return showDescriptionForSeries[series.id] !== false && (showDescriptionForSeries[series.id] || series.description);
+    return showDescriptionForSeries[series.id] !== false 
+      && (showDescriptionForSeries[series.id] || !!series.description?.trim());
   };
 
   return (
@@ -203,7 +203,7 @@ const SeriesSettingsView: React.FC = () => {
                       onClick={() =>
                         setShowDescriptionForSeries((prev) => ({
                           ...prev,
-                          [currentSeries.id]: prev[currentSeries.id] === false ? true : !prev[currentSeries.id],
+                          [currentSeries.id]: !isDescriptionShowing(currentSeries),
                         }))
                       }
                       className="flex items-center gap-2"
