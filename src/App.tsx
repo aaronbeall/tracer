@@ -14,7 +14,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { LineChart, Table, Calendar, History, Settings } from 'lucide-react';
+import { LineChart, Table, Calendar, History, Settings, Edit } from 'lucide-react';
 import logo from '@/assets/logo.svg';
 import './App.css'
 import ChartView from './components/ChartView';
@@ -36,6 +36,7 @@ import SettingsView from './components/SettingsView';
 import { isAfter, isBefore, startOfYear, subDays, subMonths, subYears } from 'date-fns';
 import { useDataStore, useSeriesByName } from '@/store/dataStore';
 import AboutDialog from './components/AboutDialog';
+import SeriesSettingsView from './components/SeriesSettingsView';
 
 type TimeFrame = 'All Time' | 'Past Week' | 'Past Month' | 'Past Year' | 'YTD' | 'Custom...';
 
@@ -225,6 +226,7 @@ function App() {
 
       <Routes>
         <Route path="/settings" element={<SettingsView />} />
+        <Route path="/series-settings" element={<SeriesSettingsView />} />
         <Route
           path="*"
           element={
@@ -253,65 +255,72 @@ function App() {
 
               <Card className="p-6 mt-6">
                 <div className="flex items-center justify-between">
-                    <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <Badge
+                      variant={selectedSeries.length === 0 ? 'default' : 'outline'}
+                      onClick={() => setSelectedSeries([])}
+                      className="cursor-pointer"
+                    >
+                      All
+                    </Badge>
+                    {availableSeries.map((series) => (
                       <Badge
-                        key="all"
-                        variant={selectedSeries.length === 0 ? 'default' : 'outline'}
-                        onClick={() => setSelectedSeries([])}
+                        key={series}
+                        variant={selectedSeries.includes(series) ? 'default' : 'outline'}
+                        onClick={() => {
+                          setSelectedSeries((prev) =>
+                            prev.includes(series)
+                              ? prev.filter((s) => s !== series)
+                              : [...prev, series]
+                          );
+                        }}
                         className="cursor-pointer"
+                        style={
+                          selectedSeries.includes(series)
+                            ? {
+                                backgroundColor: seriesByName[series]?.color || 'black',
+                                color: 'white',
+                              }
+                            : {
+                                borderColor: seriesByName[series]?.color || 'black',
+                                color: seriesByName[series]?.color || 'black',
+                              }
+                        }
                       >
-                        All
+                        {series}
                       </Badge>
-                      {availableSeries.map((series) => (
-                        <Badge
-                          key={series}
-                          variant={selectedSeries.includes(series) ? 'default' : 'outline'}
-                          onClick={() => {
-                            setSelectedSeries((prev) =>
-                              prev.includes(series)
-                                ? prev.filter((s) => s !== series)
-                                : [...prev, series]
-                            );
-                          }}
-                          className="cursor-pointer"
-                          style={
-                            selectedSeries.includes(series)
-                              ? {
-                                  backgroundColor: seriesByName[series]?.color || 'black',
-                                  color: 'white',
-                                }
-                              : {
-                                  borderColor: seriesByName[series]?.color || 'black',
-                                  color: seriesByName[series]?.color || 'black',
-                                }
-                          }
-                        >
-                          {series}
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-4">
-                      {timeFrame === 'Custom...' && (
-                        <DateRangePicker
-                          selectedDate={customRange}
-                          onDateChange={(range: DateRange | undefined) => setCustomRange(range)}
-                        />
-                      )}
-                      <Select value={timeFrame} onValueChange={(value) => handleTimeFrameChange(value)}>
-                        <SelectTrigger className="border rounded px-2 py-1 text-sm">
-                          {timeFrame}
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="All Time">All Time</SelectItem>
-                          <SelectItem value="Past Week">Past Week</SelectItem>
-                          <SelectItem value="Past Month">Past Month</SelectItem>
-                          <SelectItem value="Past Year">Past Year</SelectItem>
-                          <SelectItem value="YTD">YTD</SelectItem>
-                          <SelectItem value="Custom...">Custom...</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    ))}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="ml-2"
+                        onClick={() => navigate('/series-settings')}
+                      >
+                        <Edit />
+                      </Button>
                   </div>
+                  <div className="flex items-center gap-4">
+                    {timeFrame === 'Custom...' && (
+                      <DateRangePicker
+                        selectedDate={customRange}
+                        onDateChange={(range: DateRange | undefined) => setCustomRange(range)}
+                      />
+                    )}
+                    <Select value={timeFrame} onValueChange={(value) => handleTimeFrameChange(value)}>
+                      <SelectTrigger className="border rounded px-2 py-1 text-sm">
+                        {timeFrame}
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All Time">All Time</SelectItem>
+                        <SelectItem value="Past Week">Past Week</SelectItem>
+                        <SelectItem value="Past Month">Past Month</SelectItem>
+                        <SelectItem value="Past Year">Past Year</SelectItem>
+                        <SelectItem value="YTD">YTD</SelectItem>
+                        <SelectItem value="Custom...">Custom...</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </Card>
 
               <Card className="p-6 mt-6">
