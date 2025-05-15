@@ -25,20 +25,35 @@ interface TracerDB {
     value: DataPoint;
     indexes: { 'by-series': string; 'by-timestamp': number };
   };
+  series: {
+    key: number;
+    value: DataSeries;
+    indexes: { 'by-name': string };
+  };
 }
 
 class DatabaseService {
   private db: IDBPDatabase<TracerDB> | null = null;
 
   async init() {
-    this.db = await openDB<TracerDB>('tracer-db', 1, {
-      upgrade(db) {
-        const store = db.createObjectStore('datapoints', {
-          keyPath: 'id',
-          autoIncrement: true,
-        });
-        store.createIndex('by-series', 'series');
-        store.createIndex('by-timestamp', 'timestamp');
+    this.db = await openDB<TracerDB>('tracer-db', 2, {
+      upgrade(db, oldVersion) {
+        if (oldVersion < 1) {
+          const datapointsStore = db.createObjectStore('datapoints', {
+            keyPath: 'id',
+            autoIncrement: true,
+          });
+          datapointsStore.createIndex('by-series', 'series');
+          datapointsStore.createIndex('by-timestamp', 'timestamp');
+        }
+
+        if (oldVersion < 2) {
+          const seriesStore = db.createObjectStore('series', {
+            keyPath: 'id',
+            autoIncrement: true,
+          });
+          seriesStore.createIndex('by-name', 'name');
+        }
       },
     });
   }
@@ -70,6 +85,39 @@ class DatabaseService {
   async deleteDataPoint(id: number) {
     if (!this.db) await this.init();
     await this.db!.delete('datapoints', id);
+  }
+
+  async addSeries(name: string, color: string, unit?: string, description?: string, type?: 'numeric' | 'text') {
+    if (!this.db) await this.init();
+    const series = {
+      name,
+      color,
+      unit,
+      description,
+      type,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    return this.db!.add('series', series);
+  }
+
+  async getAllSeries(): Promise<DataSeries[]> {
+    if (!this.db) await this.init();
+    return this.db!.getAll('series');
+  }
+
+  async updateSeries(id: number, updatedData: Partial<DataSeries>) {
+    if (!this.db) await this.init();
+    const existingData = await this.db!.get('series', id);
+    if (existingData) {
+      const updatedSeries = { ...existingData, ...updatedData, updatedAt: Date.now() };
+      await this.db!.put('series', updatedSeries);
+    }
+  }
+
+  async deleteSeries(id: number) {
+    if (!this.db) await this.init();
+    await this.db!.delete('series', id);
   }
 
   async deleteDatabase() {
