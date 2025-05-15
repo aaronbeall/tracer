@@ -118,58 +118,60 @@ const SeriesSettingsView: React.FC = () => {
         return (
           <Card key={currentSeries.id} className="p-4 mb-4">
             <div className="flex flex-col">
-              <div className="flex items-center gap-4 relative">
-                <Input
-                  value={currentSeries.name || ''}
-                  onChange={(e) => updateEditedSeries(currentSeries.id, { name: e.target.value })}
-                  placeholder="Series Name"
-                  className={`pr-10 ${currentSeries.error ? 'border-red-500' : ''}`}
-                />
-                {currentSeries.error && (
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <AlertCircle className="text-red-500" size={16} />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {currentSeries.error}
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                )}
-                <ColorSwatch
-                  color={currentSeries.color || ''}
-                  onChange={(color) => updateEditedSeries(currentSeries.id, { color })}
-                />
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button className="p-2 text-2xl" size="icon" variant="ghost">
-                      {currentSeries.emoji ? (
-                        <span>{currentSeries.emoji}</span>
-                      ) : (
-                        <span className="text-gray-400">○</span>
+              <div className="flex items-center gap-4 relative justify-between">
+                <div className="flex items-center gap-4">
+                  <Input
+                    value={currentSeries.name || ''}
+                    onChange={(e) => updateEditedSeries(currentSeries.id, { name: e.target.value })}
+                    placeholder="Series Name"
+                    className={`pr-10 flex-1 ${currentSeries.error ? 'border-red-500' : ''}`}
+                  />
+                  <Select
+                    value={currentSeries.type || 'numeric'}
+                    onValueChange={(value) => updateEditedSeries(currentSeries.id, { type: value as 'numeric' | 'text' })}
+                  >
+                    <SelectTrigger className="w-32">
+                      <span>{currentSeries.type === 'text' ? 'Text' : 'Numeric'}</span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="numeric">Numeric</SelectItem>
+                      <SelectItem value="text">Text</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <ColorSwatch
+                    color={currentSeries.color || ''}
+                    onChange={(color) => updateEditedSeries(currentSeries.id, { color })}
+                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button className="p-2 text-2xl" size="icon" variant="ghost">
+                        {currentSeries.emoji ? (
+                          <span>{currentSeries.emoji}</span>
+                        ) : (
+                          <span className="text-gray-400">○</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 w-full h-full bg-gray-950">
+                      {currentSeries.emoji && (
+                        <div className="p-2 border-b border-gray-200">
+                          <Button
+                            variant="destructive"
+                            className='w-full'
+                            size="sm"
+                            onClick={() => handleEmojiChange(currentSeries.id, undefined)}
+                          >
+                            <Trash/> Remove Emoji
+                          </Button>
+                        </div>
                       )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-0 w-full h-full bg-gray-950">
-                    {currentSeries.emoji && (
-                      <div className="p-2 border-b border-gray-200">
-                        <Button
-                          variant="destructive"
-                          className='w-full'
-                          size="sm"
-                          onClick={() => handleEmojiChange(currentSeries.id, undefined)}
-                        >
-                          <Trash/> Remove Emoji
-                        </Button>
-                      </div>
-                    )}
-                    <Picker
-                      autoFocus
-                      onEmojiSelect={(emoji: { native: string }) => handleEmojiChange(currentSeries.id, emoji.native)}
-                    />
-                  </PopoverContent>
-                </Popover>
+                      <Picker
+                        autoFocus
+                        onEmojiSelect={(emoji: { native: string }) => handleEmojiChange(currentSeries.id, emoji.native)}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button className="p-2" size="icon" variant='ghost'>
@@ -184,6 +186,12 @@ const SeriesSettingsView: React.FC = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
+              <textarea
+                value={currentSeries.description || ''}
+                onChange={(e) => updateEditedSeries(currentSeries.id, { description: e.target.value })}
+                placeholder="Series Description"
+                className="w-full p-2 border border-gray-300 rounded-md text-sm mt-4"
+              />
               <div className="text-xs text-gray-500 mt-4 flex items-center space-x-2 border-t border-gray-200 pt-2">
                 <Tooltip>
                   <TooltipTrigger asChild>
