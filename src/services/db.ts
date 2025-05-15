@@ -12,6 +12,7 @@ export interface DataSeries {
   id: number;
   name: string;
   color: string;
+  emoji?: string;
   unit?: string;
   description?: string;
   type?: 'numeric' | 'text';

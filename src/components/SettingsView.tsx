@@ -93,7 +93,7 @@ const SettingsView: React.FC = () => {
 
     try {
       for (const { series, value, timestamp } of data) {
-        await addDataPoint(series, value, timestamp);
+        await addDataPoint({ series, value, timestamp });
       }
       toast.success('Dummy data generated successfully!');
     } catch (error) {

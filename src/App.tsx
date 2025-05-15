@@ -103,7 +103,7 @@ function App() {
     if (seriesInput && valueInput) {
       const values = valueInput.split(',').map((v) => v.trim()).map(parseTextValue);
       for (const value of values) {
-        await addDataPoint(seriesInput, value);
+        await addDataPoint({ series: seriesInput, value });
       }
     }
   };
@@ -185,7 +185,7 @@ function App() {
     if (file) {
       importDataFromCSV(file, async (importedData) => {
         for (const data of importedData) {
-          await addDataPoint(data.series, data.value, data.timestamp);
+          await addDataPoint(data);
         }
       });
     }
