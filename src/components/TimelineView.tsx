@@ -1,30 +1,54 @@
 import type { DataPoint } from '@/services/db';
+import { Timeline, TimelineItem, TimelineSeparator, TimelineConnector, TimelineContent, TimelineDot, TimelineOppositeContent } from '@mui/lab';
+import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 
 interface TimelineViewProps {
   dataPoints: DataPoint[];
   selectedSeries: string[];
 }
 
-const TimelineView: React.FC<TimelineViewProps> = ({ dataPoints, selectedSeries }) => {
-  const filteredPoints = dataPoints
-    .filter((p) => selectedSeries.includes(p.series))
-    .sort((a, b) => a.timestamp - b.timestamp);
+const TimelineView: React.FC<TimelineViewProps> = ({ dataPoints }) => {
+  const sortedPoints = dataPoints.sort((a, b) => b.timestamp - a.timestamp);
+
+  let lastDate: string | null = null;
 
   return (
-    <div className="timeline-container">
-      {filteredPoints.map((point) => (
-        <div key={point.id} className="timeline-item">
-          <div className="timeline-dot" />
-          <div className="timeline-content">
-            <div className="timeline-date">
-              {new Date(point.timestamp).toLocaleString()}
-            </div>
-            <div className="timeline-series">{point.series}</div>
-            <div className="timeline-value">{point.value}</div>
-          </div>
-        </div>
-      ))}
-    </div>
+    <Timeline>
+      {sortedPoints.map((point) => {
+        const currentDate = format(new Date(point.timestamp), 'MMMM d, yyyy');
+        const isNewDay = currentDate !== lastDate;
+        lastDate = currentDate;
+
+        return (
+          <>
+            {isNewDay && (
+              <TimelineItem key={`date-${currentDate}`} position="left">
+                <TimelineSeparator>
+                  <TimelineDot />
+                  <TimelineConnector />
+                </TimelineSeparator>
+                <TimelineContent>
+                  <p className="font-bold text-gray-800">{currentDate}</p>
+                </TimelineContent>
+              </TimelineItem>
+            )}
+            <TimelineItem key={point.id} position="right">
+              <TimelineOppositeContent>
+                <p className="text-sm text-gray-500">{format(new Date(point.timestamp), 'h:mm a')}</p>
+              </TimelineOppositeContent>
+              <TimelineSeparator>
+                <TimelineDot color="primary" />
+                <TimelineConnector />
+              </TimelineSeparator>
+              <TimelineContent>
+                <Badge>{point.series}</Badge> {point.value}
+              </TimelineContent>
+            </TimelineItem>
+          </>
+        );
+      })}
+    </Timeline>
   );
 };
 
