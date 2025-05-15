@@ -24,7 +24,7 @@ export const useDataStore = create<DataStore>((set, get) => {
     return get().series.find((s) => s.name === seriesName);
   };
 
-  const ensureSeriesExists = async (seriesName: string) => {
+  const ensureSeriesExists = async (seriesName: string): Promise<DataSeries> => {
     const existingSeries = findSeriesByName(seriesName);
     if (!existingSeries) {
       const randomHue = Math.floor(Math.random() * 360);
@@ -35,10 +35,12 @@ export const useDataStore = create<DataStore>((set, get) => {
         name: seriesName,
         color: randomColor,
         createdAt: Date.now(),
-        updatedAt: Date.now(),
+        updatedAt: Date.now()
       };
       set((state) => ({ series: [...state.series, newSeries] }));
+      return newSeries;
     }
+    return existingSeries;
   };
 
   return {
@@ -62,11 +64,13 @@ export const useDataStore = create<DataStore>((set, get) => {
     },
 
     addDataPoint: async ({ series, value, timestamp }: { series: string; value: number | string; timestamp?: number }) => {
-      await ensureSeriesExists(series);
+      const associatedSeries = await ensureSeriesExists(series);
 
       const id = await db.addDataPoint(series, value, timestamp);
       const newPoint: DataPoint = { id: id as number, series, value, timestamp: timestamp || Date.now() };
       set((state) => ({ dataPoints: [...state.dataPoints, newPoint] }));
+
+      get().updateSeries(associatedSeries.id, { dataAddedAt: Date.now() });
     },
 
     updateDataPoint: async (id, updatedData) => {
@@ -96,14 +100,62 @@ export const useDataStore = create<DataStore>((set, get) => {
     },
 
     updateSeries: async (id, updatedData) => {
+      const existingSeries = get().series.find((s) => s.id === id);
+      if (!existingSeries) {
+        throw new Error(`Series with id ${id} not found`);
+      }
+
+      // Update the series in the database
       await db.updateSeries(id, updatedData);
+
+      // If the name is being updated, update all associated data points
+      if (updatedData.name && updatedData.name !== existingSeries.name) {
+        const oldName = existingSeries.name;
+        const newName = updatedData.name;
+
+        // Update data points in the database
+        const dataPointsToUpdate = get().dataPoints.filter((dp) => dp.series === oldName);
+        for (const dp of dataPointsToUpdate) {
+          await db.updateDataPoint(dp.id, { series: newName });
+        }
+
+        // Update data points in the store
+        set((state) => ({
+          dataPoints: state.dataPoints.map((dp) =>
+            dp.series === oldName ? { ...dp, series: newName } : dp
+          ),
+        }));
+      }
+
+      // Update the series in the store
       set((state) => ({
-        series: state.series.map((s) => (s.id === id ? { ...s, ...updatedData, updatedAt: Date.now() } : s)),
+        series: state.series.map((s) =>
+          s.id === id ? { ...s, ...updatedData, updatedAt: Date.now() } : s
+        ),
       }));
     },
 
     deleteSeries: async (id) => {
+      const seriesToDelete = get().series.find((s) => s.id === id);
+      if (!seriesToDelete) {
+        throw new Error(`Series with id ${id} not found`);
+      }
+
+      // Delete associated data points from the database
+      const associatedDataPoints = get().dataPoints.filter((dp) => dp.series === seriesToDelete.name);
+      for (const dp of associatedDataPoints) {
+        await db.deleteDataPoint(dp.id);
+      }
+
+      // Remove associated data points from the store
+      set((state) => ({
+        dataPoints: state.dataPoints.filter((dp) => dp.series !== seriesToDelete.name),
+      }));
+
+      // Delete the series from the database
       await db.deleteSeries(id);
+
+      // Remove the series from the store
       set((state) => ({
         series: state.series.filter((s) => s.id !== id),
       }));
