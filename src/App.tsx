@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,7 +9,6 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { db } from './services/db';
 import type { DataPoint } from './services/db';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
@@ -36,6 +35,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { saveAs } from 'file-saver';
 import SettingsView from './components/SettingsView';
 import { isAfter, isBefore, startOfYear, subDays, subMonths, subYears } from 'date-fns';
+import { useDataStore } from '@/store/dataStore';
 
 type TimeFrame = 'All Time' | 'Past Week' | 'Past Month' | 'Past Year' | 'YTD' | 'Custom...';
 
@@ -78,9 +78,15 @@ function importDataFromCSV(file: File, onImport: (importedData: DataPoint[]) => 
 function App() {
   const navigate = useNavigate(); // Moved inside the App component to ensure it is used within the Router context
 
-  const [dataPoints, setDataPoints] = useState<DataPoint[]>([]);
+  const {
+    dataPoints,
+    loadDataPoints,
+    addDataPoint,
+    updateDataPoint,
+    deleteDataPoint,
+  } = useDataStore();
+
   const [selectedSeries, setSelectedSeries] = useState<string[]>([]);
-  const [availableSeries, setAvailableSeries] = useState<string[]>([]);
   const [seriesInput, setSeriesInput] = useState<string>('');
   const [valueInput, setValueInput] = useState<string>(''); // Separate state for value input
   const [timeFrame, setTimeFrame] = useState<TimeFrame>('All Time');
@@ -88,23 +94,16 @@ function App() {
   const [isAboutOpen, setIsAboutOpen] = useState(false);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    loadDataPoints();
+  }, [loadDataPoints]);
 
-  const loadData = async () => {
-    const points = await db.getAllDataPoints();
-    console.log('Fetched data points:', points); // Debug log
-    setDataPoints(points);
-    const series = Array.from(new Set(points.map((p) => p.series)));
-    console.log('Available series:', series); // Debug log
-    setAvailableSeries(series);
-  };
+  const availableSeries = useMemo(() => Array.from(new Set(dataPoints.map((p) => p.series))), [dataPoints]);
 
   const processValues = async () => {
     if (seriesInput && valueInput) {
       const values = valueInput.split(',').map((v) => v.trim()).map(parseTextValue);
       for (const value of values) {
-        await db.addDataPoint(seriesInput, value);
+        await addDataPoint(seriesInput, value);
       }
     }
   };
@@ -113,26 +112,12 @@ function App() {
     await processValues();
     setSeriesInput('');
     setValueInput('');
-    loadData();
   };
 
   const handleEdit = async (id: number, updatedData: Partial<DataPoint>) => {
     try {
-      await db.updateDataPoint(id, updatedData); // Persist changes to the database
+      await updateDataPoint(id, updatedData); // Persist changes to the database
       toast.success('Data updated successfully!'); // Show success toast
-
-      // Update the local state
-      setDataPoints((prevDataPoints) => {
-        const updatedDataPoints = prevDataPoints.map((dataPoint) =>
-          dataPoint.id === id ? { ...dataPoint, ...updatedData } : dataPoint
-        );
-
-        // Update available series
-        const updatedSeries = Array.from(new Set(updatedDataPoints.map((p) => p.series)));
-        setAvailableSeries(updatedSeries);
-
-        return updatedDataPoints;
-      });
     } catch (error) {
       console.error('Failed to update the database:', error);
       toast.error('Failed to update data. Please try again.'); // Show error toast
@@ -141,13 +126,8 @@ function App() {
 
   const handleDelete = async (id: number) => {
     try {
-      await db.deleteDataPoint(id); // Remove the data point from the database
+      await deleteDataPoint(id); // Remove the data point from the database
       toast.success('Data point deleted successfully!'); // Show delete confirmation toast
-
-      // Update the local state
-      setDataPoints((prevDataPoints) =>
-        prevDataPoints.filter((dataPoint) => dataPoint.id !== id)
-      );
     } catch (error) {
       console.error('Failed to delete the data point:', error);
       toast.error('Failed to delete data. Please try again.'); // Show error toast
@@ -158,7 +138,6 @@ function App() {
     if (e.key === 'Enter') {
       await processValues();
       setValueInput('');
-      loadData();
     }
   };
 
@@ -204,9 +183,10 @@ function App() {
   const handleImport = async () => {
     const file = await chooseFile('.csv');
     if (file) {
-      importDataFromCSV(file, (importedData) => {
-        // Merge imported data with existing data
-        setDataPoints((prev) => [...prev, ...importedData]);
+      importDataFromCSV(file, async (importedData) => {
+        for (const data of importedData) {
+          await addDataPoint(data.series, data.value, data.timestamp);
+        }
       });
     }
   };

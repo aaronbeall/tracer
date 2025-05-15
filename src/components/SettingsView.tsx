@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { db } from '../services/db';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -12,9 +11,16 @@ import type { DateRange, SelectRangeEventHandler } from 'react-day-picker';
 import { Table, TableHead, TableRow, TableHeader, TableBody, TableCell } from '@/components/ui/table';
 import { Slider } from '@/components/ui/slider';
 import type { DataPoint } from '../services/db';
+import { useDataStore } from '@/store/dataStore';
 
 const SettingsView: React.FC = () => {
   const navigate = useNavigate();
+  const {
+    addDataPoint,
+    deleteDataPoint,
+    dataPoints,
+  } = useDataStore();
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedSeries, setSelectedSeries] = useState('');
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
@@ -29,7 +35,9 @@ const SettingsView: React.FC = () => {
   const handleDeleteDatabase = async () => {
     if (window.confirm('Are you sure you want to delete the local database? This action cannot be undone.')) {
       try {
-        await db.deleteDatabase();
+        for (const point of dataPoints) {
+          await deleteDataPoint(point.id);
+        }
         toast.success('Local database deleted successfully!');
       } catch (error) {
         toast.error('Failed to delete the database. Please try again.');
@@ -83,11 +91,9 @@ const SettingsView: React.FC = () => {
       });
     }
 
-    console.log('Generated Data:', data);
-    
     try {
       for (const { series, value, timestamp } of data) {
-        await db.addDataPoint(series, value, timestamp);
+        await addDataPoint(series, value, timestamp);
       }
       toast.success('Dummy data generated successfully!');
     } catch (error) {

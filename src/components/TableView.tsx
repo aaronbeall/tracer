@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { DataPoint } from '@/services/db';
 import { Button } from '@/components/ui/button';
 import { Trash, ChevronUp, ChevronDown } from 'lucide-react';
-import { Dialog, DialogTrigger, DialogContent, DialogFooter, DialogTitle } from '@/components/ui/dialog';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { createColumnHelper, useReactTable, getCoreRowModel, getSortedRowModel } from '@tanstack/react-table';
 import type { SortingState } from '@tanstack/react-table';
 
@@ -92,19 +92,18 @@ const TableView: React.FC<TableViewProps> = ({ dataPoints, onEdit, onDelete, ava
       id: 'actions',
       header: 'Actions',
       cell: (info) => (
-        <Dialog open={!!rowToDelete} onOpenChange={(isOpen) => !isOpen && setRowToDelete(null)}>
-          <DialogTrigger asChild>
+        <Popover>
+          <PopoverTrigger asChild>
             <Button
               variant="ghost"
               onClick={() => setRowToDelete(info.row.original)}
             >
               <Trash className="w-4 h-4" />
             </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogTitle>Confirm Deletion</DialogTitle>
+          </PopoverTrigger>
+          <PopoverContent>
             <p>Are you sure you want to delete this row?</p>
-            <DialogFooter>
+            <div className="flex justify-end gap-2 mt-2">
               <Button
                 variant="secondary"
                 onClick={() => setRowToDelete(null)}
@@ -117,9 +116,9 @@ const TableView: React.FC<TableViewProps> = ({ dataPoints, onEdit, onDelete, ava
               >
                 Delete
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </div>
+          </PopoverContent>
+        </Popover>
       ),
     }),
   ];
@@ -162,6 +161,7 @@ const TableView: React.FC<TableViewProps> = ({ dataPoints, onEdit, onDelete, ava
               {row.getVisibleCells().map((cell) => (
                 <td
                   key={cell.id}
+                  title={`${row.id} -> ${cell.id} `}
                   className="px-4 py-2 text-sm text-gray-600"
                 >
                   {typeof cell.column.columnDef.cell === 'function'
