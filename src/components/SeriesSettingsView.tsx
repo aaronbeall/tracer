@@ -10,6 +10,9 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { toast } from 'sonner'; // Corrected import for toast notifications
 import type { DataSeries } from '@/services/db';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import Picker from '@emoji-mart/react';
+import ColorSwatch from './ColorSwatch';
 
 const SeriesSettingsView: React.FC = () => {
   const { series, updateSeries, deleteSeries } = useDataStore();
@@ -85,32 +88,44 @@ const SeriesSettingsView: React.FC = () => {
           <Card key={currentSeries.id} className="p-4 mb-4">
             <div className="flex flex-col">
               <div className="flex items-center gap-4 relative">
-                <div className="relative w-full">
-                  <Input
-                    value={currentSeries.name || ''}
-                    onChange={(e) => updateEditedSeries(currentSeries.id, { name: e.target.value })}
-                    placeholder="Series Name"
-                    className={`pr-10 ${currentSeries.error ? 'border-red-500' : ''}`}
-                  />
-                  {currentSeries.error && (
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <AlertCircle className="text-red-500" size={16} />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {currentSeries.error}
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  )}
-                </div>
                 <Input
-                  value={currentSeries.color || ''}
-                  onChange={(e) => updateEditedSeries(currentSeries.id, { color: e.target.value })}
-                  placeholder="Series Color"
-                  type="color"
+                  value={currentSeries.name || ''}
+                  onChange={(e) => updateEditedSeries(currentSeries.id, { name: e.target.value })}
+                  placeholder="Series Name"
+                  className={`pr-10 ${currentSeries.error ? 'border-red-500' : ''}`}
                 />
+                {currentSeries.error && (
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <AlertCircle className="text-red-500" size={16} />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {currentSeries.error}
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                )}
+                <ColorSwatch
+                  color={currentSeries.color || ''}
+                  onChange={(color) => updateEditedSeries(currentSeries.id, { color })}
+                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button className="p-2" size="icon" variant="ghost">
+                      {currentSeries.emoji ? (
+                        <span>{currentSeries.emoji}</span>
+                      ) : (
+                        <span className="text-gray-400">○</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="p-0 w-full h-full">
+                    <Picker
+                      onEmojiSelect={(emoji: { native: string }) => updateEditedSeries(currentSeries.id, { emoji: emoji.native })}
+                    />
+                  </PopoverContent>
+                </Popover>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button className="p-2" size="icon" variant='ghost'>
