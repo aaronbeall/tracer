@@ -20,6 +20,7 @@ const SeriesSettingsView: React.FC = () => {
   const [editedSeries, setEditedSeries] = useState<Partial<DataSeries>[]>([]); // Initialize as an empty array
   const navigate = useNavigate();
   const [sortOption, setSortOption] = useState<'createdAt' | 'updatedAt' | 'dataAddedAt'>('createdAt');
+  const [showDescriptionForSeries, setShowDescriptionForSeries] = useState<Record<number, boolean>>({});
 
   const displaySeries = useMemo(() => {
     return series.map((s) => {
@@ -88,6 +89,11 @@ const SeriesSettingsView: React.FC = () => {
 
   const handleEmojiChange = (id: number, emoji: string | undefined) => {
     updateEditedSeries(id, { emoji });
+  };
+
+  // Update the helper function to take the entire series object instead of separate parameters
+  const isDescriptionShowing = (series: DataSeries) => {
+    return showDescriptionForSeries[series.id] !== false && (showDescriptionForSeries[series.id] || series.description);
   };
 
   return (
@@ -179,19 +185,40 @@ const SeriesSettingsView: React.FC = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem variant="destructive" className="flex items-center gap-2" onClick={() => handleDelete(currentSeries.id)}>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        setShowDescriptionForSeries((prev) => ({
+                          ...prev,
+                          [currentSeries.id]: prev[currentSeries.id] === false ? true : !prev[currentSeries.id],
+                        }))
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      {isDescriptionShowing(currentSeries)
+                        ? 'Hide Description'
+                        : currentSeries.description
+                        ? 'Show Description'
+                        : 'Add Description'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      variant="destructive"
+                      className="flex items-center gap-2"
+                      onClick={() => handleDelete(currentSeries.id)}
+                    >
                       <Trash size={16} />
                       Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <textarea
-                value={currentSeries.description || ''}
-                onChange={(e) => updateEditedSeries(currentSeries.id, { description: e.target.value })}
-                placeholder="Series Description"
-                className="w-full p-2 border border-gray-300 rounded-md text-sm mt-4"
-              />
+              {isDescriptionShowing(currentSeries) && (
+                <textarea
+                  value={currentSeries.description || ''}
+                  onChange={(e) => updateEditedSeries(currentSeries.id, { description: e.target.value })}
+                  placeholder="Series Description"
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm mt-4"
+                />
+              )}
               <div className="text-xs text-gray-500 mt-4 flex items-center space-x-2 border-t border-gray-200 pt-2">
                 <Tooltip>
                   <TooltipTrigger asChild>
