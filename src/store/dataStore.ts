@@ -172,3 +172,43 @@ export const useSeriesByName = () => {
     }, {} as Record<string, DataSeries>);
   }, [series]);
 };
+
+export const useDataBySeries = () => {
+  const dataPoints = useDataStore((state) => state.dataPoints);
+
+  return useMemo(() => {
+    const groupedData: Record<string, DataPoint[]> = {};
+
+    for (const dp of dataPoints) {
+      if (!groupedData[dp.series]) {
+        groupedData[dp.series] = [];
+      }
+      groupedData[dp.series].push(dp);
+    }
+
+    return groupedData;
+  }, [dataPoints]);
+};
+
+export const useSeriesUniqueValues = () => {
+  const series = useDataStore((state) => state.series);
+  const dataBySeries = useDataBySeries();
+
+  return useMemo(() => {
+    const textSeries = series.filter((s) => s.type === 'text');
+    const uniqueValuesMap: Record<string, string[]> = {};
+
+    for (const s of textSeries) {
+      const dataPoints = dataBySeries[s.name] || [];
+      uniqueValuesMap[s.name] = Array.from(
+        new Set(
+          dataPoints
+            .filter((dp) => typeof dp.value === 'string')
+            .map((dp) => dp.value as string)
+        )
+      );
+    }
+
+    return uniqueValuesMap;
+  }, [series, dataBySeries]);
+};
