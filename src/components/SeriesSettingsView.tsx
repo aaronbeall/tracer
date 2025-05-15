@@ -19,7 +19,7 @@ const SeriesSettingsView: React.FC = () => {
   const { series, updateSeries, deleteSeries } = useDataStore();
   const [editedSeries, setEditedSeries] = useState<Partial<DataSeries>[]>([]); // Initialize as an empty array
   const navigate = useNavigate();
-  const [sortOption, setSortOption] = useState<'createdAt' | 'updatedAt' | 'dataAddedAt'>('createdAt');
+  const [sortOption, setSortOption] = useState<'createdAt' | 'updatedAt' | 'dataAddedAt' | 'name'>('createdAt');
   const [showDescriptionForSeries, setShowDescriptionForSeries] = useState<Record<number, boolean>>({});
 
   const displaySeries = useMemo(() => {
@@ -50,9 +50,12 @@ const SeriesSettingsView: React.FC = () => {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       } else if (sortOption === 'updatedAt') {
         return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-      } else {
+      } else if (sortOption === 'dataAddedAt') {
         return new Date(b.dataAddedAt || 0).getTime() - new Date(a.dataAddedAt || 0).getTime();
+      } else if (sortOption === 'name') {
+        return a.name.localeCompare(b.name);
       }
+      return 0;
     });
   }, [displaySeries, sortOption]);
 
@@ -98,26 +101,37 @@ const SeriesSettingsView: React.FC = () => {
 
   return (
     <div style={{ padding: '20px' }}>
-      <Button 
-        variant="outline" 
-        onClick={() => navigate('/')} 
-        className="mb-4 flex items-center gap-2 w-auto"
-      >
-        <ArrowLeft size={16} />
-        Back to Data View
-      </Button>
-      <div className="mb-4 flex justify-end items-center gap-2">
-        <label htmlFor="sort-select" className="text-sm font-medium text-gray-700">Sort by:</label>
-        <Select value={sortOption} onValueChange={(value) => setSortOption(value as 'createdAt' | 'updatedAt' | 'dataAddedAt')}>
-          <SelectTrigger id="sort-select" className="w-48">
-            <span>{sortOption === 'createdAt' ? 'Created Date' : sortOption === 'updatedAt' ? 'Modified Date' : 'Last Data Added'}</span>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="createdAt">Created Date</SelectItem>
-            <SelectItem value="updatedAt">Modified Date</SelectItem>
-            <SelectItem value="dataAddedAt">Last Data Added</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="mb-4 flex justify-between items-center gap-2">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/')} 
+          className="flex items-center gap-2 w-auto"
+        >
+          <ArrowLeft size={16} />
+          Back to Data View
+        </Button>
+        <div className="flex items-center gap-2">
+          <label htmlFor="sort-select" className="text-sm font-medium text-gray-700">Sort by:</label>
+          <Select value={sortOption} onValueChange={(value) => setSortOption(value as 'createdAt' | 'updatedAt' | 'dataAddedAt' | 'name')}>
+            <SelectTrigger id="sort-select" className="w-48">
+              <span>{
+                sortOption === 'createdAt'
+                  ? 'Last Created'
+                  : sortOption === 'updatedAt'
+                  ? 'Last Updated'
+                  : sortOption === 'dataAddedAt'
+                  ? 'Last Data Added'
+                  : 'Name'
+              }</span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="createdAt">Last Created</SelectItem>
+              <SelectItem value="updatedAt">Last Updated</SelectItem>
+              <SelectItem value="dataAddedAt">Last Data Added</SelectItem>
+              <SelectItem value="name">Name</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       {sortedSeries.map((currentSeries) => {
         const hasEdits = Object.keys(editedSeries.find((e) => e.id === currentSeries.id) || {}).length > 1;
