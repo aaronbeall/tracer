@@ -83,59 +83,75 @@ const SeriesSettingsView: React.FC = () => {
         const hasEdits = Object.keys(editedSeries.find((e) => e.id === currentSeries.id) || {}).length > 1;
         return (
           <Card key={currentSeries.id} className="p-4 mb-4">
-            <div className="flex items-center gap-4 relative">
-              <div className="relative w-full">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-4 relative">
+                <div className="relative w-full">
+                  <Input
+                    value={currentSeries.name || ''}
+                    onChange={(e) => updateEditedSeries(currentSeries.id, { name: e.target.value })}
+                    placeholder="Series Name"
+                    className={`pr-10 ${currentSeries.error ? 'border-red-500' : ''}`}
+                  />
+                  {currentSeries.error && (
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <AlertCircle className="text-red-500" size={16} />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {currentSeries.error}
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  )}
+                </div>
                 <Input
-                  value={currentSeries.name || ''}
-                  onChange={(e) => updateEditedSeries(currentSeries.id, { name: e.target.value })}
-                  placeholder="Series Name"
-                  className={`pr-10 ${currentSeries.error ? 'border-red-500' : ''}`}
+                  value={currentSeries.color || ''}
+                  onChange={(e) => updateEditedSeries(currentSeries.id, { color: e.target.value })}
+                  placeholder="Series Color"
+                  type="color"
                 />
-                {currentSeries.error && (
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <AlertCircle className="text-red-500" size={16} />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {currentSeries.error}
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                )}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button className="p-2" size="icon" variant='ghost'>
+                      <MoreHorizontal size={16} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem variant="destructive" className="flex items-center gap-2" onClick={() => handleDelete(currentSeries.id)}>
+                      <Trash size={16} />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-              <Input
-                value={currentSeries.color || ''}
-                onChange={(e) => updateEditedSeries(currentSeries.id, { color: e.target.value })}
-                placeholder="Series Color"
-                type="color"
-              />
               {hasEdits && (
-                <>
-                  <Button
-                    onClick={() => handleSave(currentSeries.id)}
-                    disabled={!currentSeries.isValid}
-                  >
-                    <Check size={16} />
-                  </Button>
-                  <Button variant="destructive" onClick={() => handleCancel(currentSeries.id)} className="icon-button">
-                    <X size={16} />
-                  </Button>
-                </>
+                <div className="mt-2 -mx-4 -mb-4 p-4 bg-yellow-100 border-t border-yellow-300 rounded-b-xl">
+                  <div className="flex items-center flex-wrap gap-2">
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleSave(currentSeries.id)}
+                        disabled={!currentSeries.isValid}
+                        className="bg-green-500 text-white"
+                      >
+                        <Check size={16} /> Save
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => handleCancel(currentSeries.id)}
+                      >
+                        <X size={16} /> Cancel
+                      </Button>
+                    </div>
+                    {currentSeries.error && (
+                      <div className="text-red-500 flex items-center">
+                        <AlertCircle size={16} className="inline-block mr-2" />
+                        {currentSeries.error}
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="p-2" size="icon" variant='ghost'>
-                    <MoreHorizontal size={16} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem variant="destructive" className="flex items-center gap-2" onClick={() => handleDelete(currentSeries.id)}>
-                    <Trash size={16} />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
           </Card>
         );
