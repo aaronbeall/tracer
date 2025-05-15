@@ -18,6 +18,7 @@ export interface DataSeries {
   type?: 'numeric' | 'text';
   createdAt: number;
   updatedAt: number;
+  dataAddedAt?: number;
 }
 
 interface TracerDB {

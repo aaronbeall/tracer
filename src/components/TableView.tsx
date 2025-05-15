@@ -1,19 +1,22 @@
 import { useState } from 'react';
-import type { DataPoint } from '@/services/db';
+import type { DataPoint, DataSeries } from '@/services/db';
 import { Button } from '@/components/ui/button';
 import { Trash, ChevronUp, ChevronDown } from 'lucide-react';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { createColumnHelper, useReactTable, getCoreRowModel, getSortedRowModel } from '@tanstack/react-table';
 import type { SortingState } from '@tanstack/react-table';
+import { useSeriesByName } from '@/store/dataStore';
 
 interface TableViewProps {
   dataPoints: DataPoint[];
   onEdit: (id: number, updatedData: Partial<DataPoint>) => void;
   onDelete: (id: number) => void;
-  availableSeries: string[];
+  series: DataSeries[];
 }
 
-const TableView: React.FC<TableViewProps> = ({ dataPoints, onEdit, onDelete, availableSeries }) => {
+const TableView: React.FC<TableViewProps> = ({ dataPoints, onEdit, onDelete, series }) => {
+  const availableSeries = series.map((s) => s.name);
+  const seriesByName = useSeriesByName();
   const [rowToDelete, setRowToDelete] = useState<DataPoint | null>(null);
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'timestamp', desc: true },
@@ -59,19 +62,29 @@ const TableView: React.FC<TableViewProps> = ({ dataPoints, onEdit, onDelete, ava
     columnHelper.accessor('series', {
       header: 'Series',
       cell: (info) => (
-        <>
-          <datalist id={`series-${info.row.index}`}>
-            {availableSeries.map((series) => (
-              <option key={series} value={series} />
-            ))}
-          </datalist>
-          <input
-            type="text"
-            list={`series-${info.row.index}`}
-            defaultValue={info.getValue()}
-            onBlur={(e) => handleCellEdit(info.row.index, info.column.id, e.target.value)}
-          />
-        </>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              backgroundColor: seriesByName[info.getValue()]?.color || 'gray',
+            }}
+          ></span>
+          <>
+            <datalist id={`series-${info.row.index}`}>
+              {availableSeries.map((series) => (
+                <option key={series} value={series} />
+              ))}
+            </datalist>
+            <input
+              type="text"
+              list={`series-${info.row.index}`}
+              defaultValue={info.getValue()}
+              onBlur={(e) => handleCellEdit(info.row.index, info.column.id, e.target.value)}
+            />
+          </>
+        </div>
       ),
     }),
     columnHelper.accessor('value', {
@@ -161,7 +174,6 @@ const TableView: React.FC<TableViewProps> = ({ dataPoints, onEdit, onDelete, ava
               {row.getVisibleCells().map((cell) => (
                 <td
                   key={cell.id}
-                  title={`${row.id} -> ${cell.id} `}
                   className="px-4 py-2 text-sm text-gray-600"
                 >
                   {typeof cell.column.columnDef.cell === 'function'

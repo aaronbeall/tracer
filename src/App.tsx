@@ -35,7 +35,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { saveAs } from 'file-saver';
 import SettingsView from './components/SettingsView';
 import { isAfter, isBefore, startOfYear, subDays, subMonths, subYears } from 'date-fns';
-import { useDataStore } from '@/store/dataStore';
+import { useDataStore, useSeriesByName } from '@/store/dataStore';
 
 type TimeFrame = 'All Time' | 'Past Week' | 'Past Month' | 'Past Year' | 'YTD' | 'Custom...';
 
@@ -80,11 +80,15 @@ function App() {
 
   const {
     dataPoints,
+    series,
     loadDataPoints,
+    loadSeries,
     addDataPoint,
     updateDataPoint,
     deleteDataPoint,
   } = useDataStore();
+
+  const seriesByName = useSeriesByName();
 
   const [selectedSeries, setSelectedSeries] = useState<string[]>([]);
   const [seriesInput, setSeriesInput] = useState<string>('');
@@ -95,11 +99,14 @@ function App() {
 
   useEffect(() => {
     loadDataPoints();
-  }, [loadDataPoints]);
+    loadSeries();
+  }, [loadDataPoints, loadSeries]);
 
-  const availableSeries = useMemo(() => Array.from(new Set(dataPoints.map((p) => p.series))), [dataPoints]);
+  const availableSeries = useMemo(() => series.map((s) => s.name), [series]);
 
-  const processValues = async () => {
+  const viewSeries = selectedSeries.length === 0 ? availableSeries : selectedSeries; // Pass all series to the view when 'All' is selected
+
+  const addData = async () => {
     if (seriesInput && valueInput) {
       const values = valueInput.split(',').map((v) => v.trim()).map(parseTextValue);
       for (const value of values) {
@@ -109,7 +116,7 @@ function App() {
   };
 
   const handleSubmit = async () => {
-    await processValues();
+    await addData();
     setSeriesInput('');
     setValueInput('');
   };
@@ -136,7 +143,7 @@ function App() {
 
   const handleValueInputKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      await processValues();
+      await addData();
       setValueInput('');
     }
   };
@@ -177,8 +184,6 @@ function App() {
       ? dataPoints // Show all data points when 'All' is selected
       : dataPoints.filter((p) => selectedSeries.includes(p.series))
   ), [dataPoints, selectedSeries, filterByTimeFrame]);
-
-  const viewSeries = selectedSeries.length === 0 ? availableSeries : selectedSeries; // Pass all series to the view when 'All' is selected
 
   const handleImport = async () => {
     const file = await chooseFile('.csv');
@@ -294,6 +299,17 @@ function App() {
                             );
                           }}
                           className="cursor-pointer"
+                          style={
+                            selectedSeries.includes(series)
+                              ? {
+                                  backgroundColor: seriesByName[series]?.color || 'black',
+                                  color: 'white',
+                                }
+                              : {
+                                  borderColor: seriesByName[series]?.color || 'black',
+                                  color: seriesByName[series]?.color || 'black',
+                                }
+                          }
                         >
                           {series}
                         </Badge>
@@ -364,7 +380,7 @@ function App() {
                   <div className="rounded-lg border bg-card p-6">
                     <Routes>
                       <Route path="/chart" element={<ChartView dataPoints={filteredDataPoints} selectedSeries={viewSeries} />} />
-                      <Route path="/table" element={<TableView dataPoints={filteredDataPoints} onEdit={handleEdit} onDelete={handleDelete} availableSeries={availableSeries} />} />
+                      <Route path="/table" element={<TableView dataPoints={filteredDataPoints} onEdit={handleEdit} onDelete={handleDelete} series={series} />} />
                       <Route path="/calendar" element={<CalendarView dataPoints={filteredDataPoints} selectedSeries={viewSeries} />} />
                       <Route path="/timeline" element={<TimelineView dataPoints={filteredDataPoints} selectedSeries={viewSeries} />} />
                       <Route path="*" element={<Navigate to="/chart" replace />} />

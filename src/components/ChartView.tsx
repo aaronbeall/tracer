@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { DataPoint } from '@/services/db';
 import IntervalPicker from '@/components/ui/IntervalPicker';
+import { useSeriesByName } from '@/store/dataStore';
 
 interface ChartViewProps {
   dataPoints: DataPoint[];
@@ -47,6 +48,7 @@ const groupDataByInterval = (data: DataPoint[], interval: Interval) => {
 
 const ChartView: React.FC<ChartViewProps> = ({ dataPoints, selectedSeries }) => {
   const [interval, setInterval] = useState<Interval>('Day');
+  const seriesByName = useSeriesByName();
 
   const transformedData = useMemo(() => groupDataByInterval(dataPoints, interval), [dataPoints, interval]);
 
@@ -62,16 +64,19 @@ const ChartView: React.FC<ChartViewProps> = ({ dataPoints, selectedSeries }) => 
           <YAxis stroke="hsl(var(--muted-foreground))" />
           <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--popover))', color: 'hsl(var(--popover-foreground))' }} />
           <Legend wrapperStyle={{ color: 'hsl(var(--foreground))' }} />
-          {selectedSeries.map((series) => (
-            <Line
-              key={series}
-              type="monotone"
-              dataKey={series}
-              name={series}
-              stroke={`hsl(${Math.random() * 360}, 70%, 50%)`}
-              dot={false}
-            />
-          ))}
+          {selectedSeries.map((series) => {
+            const seriesColor = seriesByName[series]?.color || 'hsl(0, 0%, 50%)';
+            return (
+              <Line
+                key={series}
+                type="monotone"
+                dataKey={series}
+                name={series}
+                stroke={seriesColor}
+                dot={false}
+              />
+            );
+          })}
         </LineChart>
       </ResponsiveContainer>
     </div>
