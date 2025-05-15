@@ -40,7 +40,9 @@ const TimelineView: React.FC<TimelineViewProps> = ({ dataPoints }) => {
                 <p className="text-sm text-gray-500">{format(new Date(point.timestamp), 'h:mm a')}</p>
               </TimelineOppositeContent>
               <TimelineSeparator>
-                <TimelineDot color="primary" style={{ backgroundColor: seriesByName[point.series]?.color || 'black' }}/>
+                <TimelineDot color="primary" style={{ backgroundColor: seriesByName[point.series]?.color || 'black' }}>
+                  {/* <div className='absolute text-2xl -ml-3 -mt-4'>{seriesByName[point.series]?.emoji}</div> */}
+                </TimelineDot>
                 <TimelineConnector />
               </TimelineSeparator>
               <TimelineContent>
@@ -48,6 +50,9 @@ const TimelineView: React.FC<TimelineViewProps> = ({ dataPoints }) => {
                   backgroundColor: seriesByName[point.series]?.color || 'black',
                   color: 'white',
                 }}>
+                  { seriesByName[point.series]?.emoji && (
+                    <span className='scale-150 mr-1' style={{ textShadow: '0px 1px 2px rgba(0, 0, 0, 0.25)' }}>{seriesByName[point.series]?.emoji}</span> 
+                  )}
                   {point.series}
                 </Badge> {point.value}
               </TimelineContent>
