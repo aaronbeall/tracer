@@ -1,5 +1,6 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import BuyMeACoffeeLogo from '@/assets/buy-me-a-coffee.svg';
 
 interface AboutDialogProps {
   isOpen: boolean;
@@ -30,6 +31,11 @@ const AboutDialog: React.FC<AboutDialogProps> = ({ isOpen, onClose }) => {
               <path xmlns="http://www.w3.org/2000/svg" d="M1033.05,324.45c-0.19-137.9-107.59-250.92-233.6-291.7c-156.48-50.64-362.86-43.3-512.28,27.2  C106.07,145.41,49.18,332.61,47.06,519.31c-1.74,153.5,13.58,557.79,241.62,560.67c169.44,2.15,194.67-216.18,273.07-321.33  c55.78-74.81,127.6-95.94,216.01-117.82C929.71,603.22,1033.27,483.3,1033.05,324.45z"/>
             </svg>
             Patreon
+          </a>
+          {' | '}
+          <a href="https://buymeacoffee.com/metamodernmonkey" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline flex items-center gap-2">
+            <img src={BuyMeACoffeeLogo} alt="Buy Me A Coffee" className="h-5 w-5" />
+            Buy Me A Coffee
           </a>
         </p>
       </DialogContent>
