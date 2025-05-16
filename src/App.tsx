@@ -34,7 +34,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { saveAs } from 'file-saver';
 import SettingsView from './components/SettingsView';
 import { isAfter, isBefore, startOfYear, subDays, subMonths, subYears } from 'date-fns';
-import { useDataStore, useSeriesByName } from '@/store/dataStore';
+import { useDataStore, useSeriesByName, useSeriesUniqueValues } from '@/store/dataStore';
 import AboutDialog from './components/AboutDialog';
 import SeriesSettingsView from './components/SeriesSettingsView';
 import SeriesBadge from './components/SeriesBadge';
@@ -91,6 +91,7 @@ function App() {
   } = useDataStore();
 
   const seriesByName = useSeriesByName();
+  const uniqueValuesMap = useSeriesUniqueValues();
 
   const [selectedSeries, setSelectedSeries] = useState<string[]>([]);
   const [seriesInput, setSeriesInput] = useState<string>('');
@@ -110,10 +111,8 @@ function App() {
 
   const addData = async () => {
     if (seriesInput && valueInput) {
-      const values = valueInput.split(',').map((v) => v.trim()).map(parseTextValue);
-      for (const value of values) {
-        await addDataPoint({ series: seriesInput, value });
-      }
+      const value = parseTextValue(valueInput.trim());
+      await addDataPoint({ series: seriesInput, value });
     }
   };
 
@@ -198,6 +197,8 @@ function App() {
     }
   };
 
+  const seriesType = seriesByName[seriesInput]?.type;
+
   return (
     <div className="container">
       <header className="py-4">
@@ -241,12 +242,21 @@ function App() {
                     placeholder="Enter a series"
                     className="flex-1"
                   />
+                  { uniqueValuesMap[seriesInput] && (
+                    <datalist id="unique-values">
+                      {uniqueValuesMap[seriesInput].map((value, index) => (
+                        <option key={index} value={value} />
+                      ))}
+                    </datalist>
+                  )}
                   <Input
                     value={valueInput}
                     onChange={(e) => setValueInput(e.target.value)}
                     onKeyDown={handleValueInputKeyDown} // Add keydown handler for Enter
-                    placeholder="Enter value(s), separated by commas"
+                    placeholder="Enter a value"
+                    type={seriesType === 'numeric' ? 'number' : 'text'}
                     className="flex-1"
+                    list={seriesType === 'text' ? "unique-values" : undefined}
                   />
                   <Button onClick={handleSubmit} disabled={!seriesInput || !valueInput} variant="default">
                     <PlusIcon />
