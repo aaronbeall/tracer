@@ -36,7 +36,11 @@ export const useDataStore = create<DataStore>((set, get) => {
         color: randomColor,
         createdAt: Date.now(),
         updatedAt: Date.now(),
-        type: typeof initialValue === 'number' ? 'numeric' : 'text',
+        type: typeof initialValue === 'number' 
+          ? 'numeric' 
+          : typeof initialValue == 'string' 
+            ? 'text' 
+            : undefined,
       };
       set((state) => ({ series: [...state.series, newSeries] }));
       return newSeries;
@@ -168,6 +172,7 @@ export const useDataStore = create<DataStore>((set, get) => {
 export const useSeriesByName = () => {
   const series = useDataStore((state) => state.series);
   return useMemo(() => {
+    console.log('useSeriesByName', series);
     return series.reduce((map, s) => {
       map[s.name] = s;
       return map;
