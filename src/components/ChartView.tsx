@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, memo } from 'react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart, Bar, Line } from 'recharts';
 import type { DataPoint } from '@/services/db';
 import IntervalPicker from '@/components/ui/IntervalPicker';
@@ -83,7 +83,7 @@ const groupDataByInterval = (data: DataPoint[], interval: Interval, seriesByName
   return transformedData;
 };
 
-const ChartView: React.FC<ChartViewProps> = ({ dataPoints, selectedSeries }) => {
+const ChartView: React.FC<ChartViewProps> = memo(({ dataPoints, selectedSeries }) => {
   const [interval, setInterval] = useState<Interval>('Day');
   const seriesByName = useSeriesByName();
   const uniqueValuesBySeries = useSeriesUniqueValues();
@@ -115,6 +115,7 @@ const ChartView: React.FC<ChartViewProps> = ({ dataPoints, selectedSeries }) => 
                 stroke={seriesByName[series]?.color || 'hsl(0, 0%, 50%)'}
                 dot={false}
                 yAxisId="left"
+                isAnimationActive={false}
               />
             ))}
 
@@ -133,6 +134,7 @@ const ChartView: React.FC<ChartViewProps> = ({ dataPoints, selectedSeries }) => 
                     fill={color}
                     stackId={series}
                     yAxisId="right"
+                    isAnimationActive={false}
                   />
                 );
               })
@@ -141,6 +143,6 @@ const ChartView: React.FC<ChartViewProps> = ({ dataPoints, selectedSeries }) => 
       </ResponsiveContainer>
     </div>
   );
-};
+});
 
 export default ChartView;

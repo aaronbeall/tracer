@@ -1,3 +1,4 @@
+import React, { memo } from 'react';
 import type { DataPoint } from '@/services/db';
 
 interface CalendarViewProps {
@@ -5,7 +6,7 @@ interface CalendarViewProps {
   selectedSeries: string[];
 }
 
-const CalendarView: React.FC<CalendarViewProps> = ({ dataPoints, selectedSeries }) => {
+const CalendarView: React.FC<CalendarViewProps> = memo(({ dataPoints, selectedSeries }) => {
   const filteredPoints = dataPoints.filter((p) => selectedSeries.includes(p.series));
   const pointsByDate: Record<string, DataPoint[]> = filteredPoints.reduce((acc: Record<string, DataPoint[]>, point) => {
     const date = new Date(point.timestamp).toLocaleDateString();
@@ -31,6 +32,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({ dataPoints, selectedSeries 
       ))}
     </div>
   );
-};
+});
 
 export default CalendarView;

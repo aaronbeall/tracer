@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -8,7 +8,7 @@ import { Table, TableHead, TableRow, TableHeader, TableBody, TableCell } from '@
 import { useDataStore } from '@/store/dataStore';
 import GenerateDataDialog from './GenerateDataDialog';
 
-const SettingsView: React.FC = () => {
+const SettingsView: React.FC = memo(() => {
   const navigate = useNavigate();
   const {
     deleteDataPoint,
@@ -78,6 +78,6 @@ const SettingsView: React.FC = () => {
       </Card>
     </div>
   );
-};
+});
 
 export default SettingsView;

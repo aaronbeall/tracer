@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, memo } from 'react';
 import { useDataStore } from '@/store/dataStore';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -14,8 +14,9 @@ import Picker from '@emoji-mart/react';
 import ColorSwatch from './ColorSwatch';
 import { Select, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select';
 import { formatDistanceToNow } from 'date-fns';
+import { useDebounceCallback } from 'usehooks-ts';
 
-const SeriesSettingsView: React.FC = () => {
+const SeriesSettingsView: React.FC = memo(() => {
   const { series, updateSeries, deleteSeries } = useDataStore();
   const [editedSeries, setEditedSeries] = useState<Partial<DataSeries>[]>([]); // Initialize as an empty array
   const navigate = useNavigate();
@@ -78,7 +79,6 @@ const SeriesSettingsView: React.FC = () => {
     setEditedSeries((prev) => prev.filter((item) => item.id !== id));
   };
 
-  // Utility function to update editedSeries sparsely
   const updateEditedSeries = (id: number, changes: Partial<DataSeries>) => {
     setEditedSeries((prev) => {
       const existingEdit = prev.find((item) => item.id === id);
@@ -93,6 +93,10 @@ const SeriesSettingsView: React.FC = () => {
   const handleEmojiChange = (id: number, emoji: string | undefined) => {
     updateEditedSeries(id, { emoji });
   };
+
+  const handleColorChange = useDebounceCallback((id: number, color: string) => {
+    updateEditedSeries(id, { color });
+  });
 
   const isDescriptionShowing = (series: DataSeries) => {
     return showDescriptionForSeries[series.id] !== false 
@@ -160,7 +164,7 @@ const SeriesSettingsView: React.FC = () => {
                   </Select>
                   <ColorSwatch
                     color={currentSeries.color || ''}
-                    onChange={(color) => updateEditedSeries(currentSeries.id, { color })}
+                    onChange={(color) => handleColorChange(currentSeries.id, color)}
                   />
                   <Popover>
                     <PopoverTrigger asChild>
@@ -298,6 +302,6 @@ const SeriesSettingsView: React.FC = () => {
       })}
     </div>
   );
-};
+});
 
 export default SeriesSettingsView;

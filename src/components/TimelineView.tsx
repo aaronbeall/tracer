@@ -1,3 +1,4 @@
+import React, { memo } from 'react';
 import type { DataPoint } from '@/services/db';
 import { Timeline, TimelineItem, TimelineSeparator, TimelineConnector, TimelineContent, TimelineDot, TimelineOppositeContent } from '@mui/lab';
 import { format } from 'date-fns';
@@ -9,7 +10,7 @@ interface TimelineViewProps {
   selectedSeries: string[];
 }
 
-const TimelineView: React.FC<TimelineViewProps> = ({ dataPoints }) => {
+const TimelineView: React.FC<TimelineViewProps> = memo(({ dataPoints }) => {
   const seriesByName = useSeriesByName();
   const sortedPoints = dataPoints.sort((a, b) => b.timestamp - a.timestamp);
 
@@ -62,6 +63,6 @@ const TimelineView: React.FC<TimelineViewProps> = ({ dataPoints }) => {
       })}
     </Timeline>
   );
-};
+});
 
 export default TimelineView;

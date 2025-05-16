@@ -102,7 +102,7 @@ function App() {
     setValueInput('');
   };
 
-  const handleEdit = async (id: number, updatedData: Partial<DataPoint>) => {
+  const handleEdit = useCallback(async (id: number, updatedData: Partial<DataPoint>) => {
     try {
       await updateDataPoint(id, updatedData); // Persist changes to the database
       toast.success('Data updated successfully!'); // Show success toast
@@ -110,9 +110,9 @@ function App() {
       console.error('Failed to update the database:', error);
       toast.error('Failed to update data. Please try again.'); // Show error toast
     }
-  };
+  }, [updateDataPoint]);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = useCallback(async (id: number) => {
     try {
       await deleteDataPoint(id); // Remove the data point from the database
       toast.success('Data point deleted successfully!'); // Show delete confirmation toast
@@ -120,7 +120,7 @@ function App() {
       console.error('Failed to delete the data point:', error);
       toast.error('Failed to delete data. Please try again.'); // Show error toast
     }
-  };
+  }, [deleteDataPoint]);
 
   const handleValueInputKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {

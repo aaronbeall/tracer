@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { memo, useState } from 'react';
 import type { DataPoint, DataSeries } from '@/services/db';
 import { Button } from '@/components/ui/button';
 import { Trash, ChevronUp, ChevronDown } from 'lucide-react';
@@ -14,7 +14,7 @@ interface TableViewProps {
   series: DataSeries[];
 }
 
-const TableView: React.FC<TableViewProps> = ({ dataPoints, onEdit, onDelete, series }) => {
+const TableView: React.FC<TableViewProps> = memo(({ dataPoints, onEdit, onDelete, series }) => {
   const availableSeries = series.map((s) => s.name);
   const seriesByName = useSeriesByName();
   const [rowToDelete, setRowToDelete] = useState<DataPoint | null>(null);
@@ -187,6 +187,6 @@ const TableView: React.FC<TableViewProps> = ({ dataPoints, onEdit, onDelete, ser
       </table>
     </div>
   );
-};
+});
 
 export default TableView;
