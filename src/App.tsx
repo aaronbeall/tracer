@@ -1,14 +1,4 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title as ChartTitle,
-  Tooltip as ChartTooltip,
-  Legend as ChartLegend,
-} from 'chart.js';
 import type { DataPoint } from './services/db';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
@@ -40,16 +30,6 @@ import SeriesSettingsView from './components/SeriesSettingsView';
 import SeriesBadge from './components/SeriesBadge';
 
 type TimeFrame = 'All Time' | 'Past Week' | 'Past Month' | 'Past Year' | 'YTD' | 'Custom...';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  ChartTitle,
-  ChartTooltip,
-  ChartLegend
-);
 
 function exportDataAsCSV(dataPoints: DataPoint[]) {
   const csvContent = [
