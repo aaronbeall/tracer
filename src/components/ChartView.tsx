@@ -151,22 +151,6 @@ const ChartView: React.FC<ChartViewProps> = memo(({ dataPoints, selectedSeries }
           <Legend wrapperStyle={{ color: 'hsl(var(--foreground))' }} />
 
           {selectedSeries
-            .filter((series) => seriesByName[series]?.type === 'numeric')
-            .map((series) => (
-              <Line
-                key={series}
-                type="monotone"
-                dataKey={series}
-                connectNulls
-                dot
-                name={series}
-                stroke={seriesByName[series]?.color || 'hsl(0, 0%, 50%)'}
-                yAxisId="left"
-                isAnimationActive={false}
-              />
-            ))}
-
-          {selectedSeries
             .filter((series) => seriesByName[series]?.type === 'text')
             .flatMap((series) =>
               (uniqueValuesBySeries[series] || []).map((value, index) => {
@@ -185,6 +169,23 @@ const ChartView: React.FC<ChartViewProps> = memo(({ dataPoints, selectedSeries }
                 );
               })
             )}
+
+          {selectedSeries
+            .filter((series) => seriesByName[series]?.type === 'numeric')
+            .map((series) => (
+              <Line
+                key={series}
+                type="monotone"
+                dataKey={series}
+                connectNulls
+                dot
+                name={series}
+                stroke={seriesByName[series]?.color || 'hsl(0, 0%, 50%)'}
+                yAxisId="left"
+                isAnimationActive={false}
+              />
+            ))}
+            
         </ComposedChart>
       </ResponsiveContainer>
     </div>
