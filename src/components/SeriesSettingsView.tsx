@@ -100,7 +100,7 @@ const SeriesSettingsView: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div>
       <div className="mb-4 flex justify-between items-center gap-2">
         <Button 
           variant="outline" 
