@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { PlusIcon } from 'lucide-react';
 import { parseTextValue } from '@/lib/utils';
 import { useDataStore, useSeriesByName, useSeriesUniqueValues } from '@/store/dataStore';
+import { toast } from 'sonner';
 
 interface AddDataSectionProps {
   availableSeries: string[];
@@ -23,6 +24,7 @@ const AddDataSection: React.FC<AddDataSectionProps> = ({ availableSeries }) => {
   const addData = async () => {
     if (seriesInput && valueInput) {
       await addDataPoint({ series: seriesInput, value: parseTextValue(valueInput) });
+      toast.success('Data added successfully!');
       setSeriesInput('');
       setValueInput('');
     }

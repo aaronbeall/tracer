@@ -50,9 +50,9 @@ const FilterSection: React.FC<FilterSectionProps> = ({
               isSelected={selectedSeries.includes(series)}
               onClick={() => {
                 onSelectedSeriesChange(
-                  availableSeries.includes(series)
-                    ? availableSeries.filter((s) => s !== series)
-                    : [...availableSeries, series]
+                  selectedSeries.includes(series)
+                    ? selectedSeries.filter((s) => s !== series)
+                    : [...selectedSeries, series]
                 );
               }}
             />
