@@ -147,11 +147,11 @@ const SeriesSettingsView: React.FC = () => {
                     className={`pr-10 flex-1 ${currentSeries.error ? 'border-red-500' : ''}`}
                   />
                   <Select
-                    value={currentSeries.type || 'numeric'}
-                    onValueChange={(value) => updateEditedSeries(currentSeries.id, { type: value as 'numeric' | 'text' })}
+                    value={currentSeries.type}
+                    onValueChange={(value) => updateEditedSeries(currentSeries.id, { type: value as DataSeries['type'] })}
                   >
-                    <SelectTrigger className="w-32">
-                      <span>{currentSeries.type === 'text' ? 'Text' : 'Numeric'}</span>
+                    <SelectTrigger className={`w-32 ${!currentSeries.type ? 'text-gray-400' : ''}`}>
+                      <span>{{ numeric: "Numeric", text: "Text", none: "Set type..." }[currentSeries.type ?? "none"]}</span>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="numeric">Numeric</SelectItem>

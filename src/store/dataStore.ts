@@ -24,7 +24,7 @@ export const useDataStore = create<DataStore>((set, get) => {
     return get().series.find((s) => s.name === seriesName);
   };
 
-  const ensureSeriesExists = async (seriesName: string): Promise<DataSeries> => {
+  const ensureSeriesExists = async (seriesName: string, initialValue?: number | string): Promise<DataSeries> => {
     const existingSeries = findSeriesByName(seriesName);
     if (!existingSeries) {
       const randomHue = Math.floor(Math.random() * 360);
@@ -35,7 +35,8 @@ export const useDataStore = create<DataStore>((set, get) => {
         name: seriesName,
         color: randomColor,
         createdAt: Date.now(),
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
+        type: typeof initialValue === 'number' ? 'numeric' : 'text',
       };
       set((state) => ({ series: [...state.series, newSeries] }));
       return newSeries;
@@ -64,7 +65,7 @@ export const useDataStore = create<DataStore>((set, get) => {
     },
 
     addDataPoint: async ({ series, value, timestamp }: { series: string; value: number | string; timestamp?: number }) => {
-      const associatedSeries = await ensureSeriesExists(series);
+      const associatedSeries = await ensureSeriesExists(series, value);
 
       const id = await db.addDataPoint(series, value, timestamp);
       const newPoint: DataPoint = { id: id as number, series, value, timestamp: timestamp || Date.now() };
@@ -75,7 +76,8 @@ export const useDataStore = create<DataStore>((set, get) => {
 
     updateDataPoint: async (id, updatedData) => {
       if (updatedData.series) {
-        await ensureSeriesExists(updatedData.series);
+        // TODO: If a new series is being set but updatedData.value is not set, we end up with a series that has no type.
+        await ensureSeriesExists(updatedData.series, updatedData.value);
       }
 
       await db.updateDataPoint(id, updatedData);
@@ -212,3 +214,4 @@ export const useSeriesUniqueValues = () => {
     return uniqueValuesMap;
   }, [series, dataBySeries]);
 };
+
