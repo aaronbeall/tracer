@@ -4,6 +4,7 @@ import type { DataPoint } from '@/services/db';
 import IntervalPicker, { type Interval } from '@/components/ui/IntervalPicker';
 import { useSeriesByName, useSeriesUniqueValues } from '@/store/dataStore';
 import tinycolor from 'tinycolor2';
+import { format, startOfWeek, endOfWeek, parse } from 'date-fns';
 
 interface ChartViewProps {
   dataPoints: DataPoint[];
@@ -20,24 +21,24 @@ const groupDataByInterval = (data: DataPoint[], interval: Interval, seriesByName
     let timeKey: string;
 
     switch (interval) {
-      case 'Minute':
-        timeKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`;
+      case 'Min':
+        timeKey = format(date, 'yyyy-MM-dd HH:mm');
         break;
       case 'Hour':
-        timeKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:00`;
+        timeKey = format(date, 'yyyy-MM-dd HH:00');
         break;
       case 'Week':
-        timeKey = `${date.getFullYear()}-W${Math.ceil(date.getDate() / 7)}`;
+        timeKey = format(date, "yyyy-'W'II");
         break;
       case 'Month':
-        timeKey = `${date.getFullYear()}-${date.getMonth() + 1}`;
+        timeKey = format(date, 'yyyy-MM');
         break;
       case 'Year':
-        timeKey = `${date.getFullYear()}`;
+        timeKey = format(date, 'yyyy');
         break;
       case 'Day':
       default:
-        timeKey = date.toLocaleDateString();
+        timeKey = format(date, 'yyyy-MM-dd');
         break;
     }
 
@@ -87,6 +88,54 @@ const ChartView: React.FC<ChartViewProps> = memo(({ dataPoints, selectedSeries }
 
   const transformedData = useMemo(() => groupDataByInterval(dataPoints, interval, seriesByName), [dataPoints, interval, seriesByName]);
 
+  const getXAxisLabelFormatter = (interval: Interval) => {
+    switch (interval) {
+      case 'Year':
+        return (dateStr: string) => dateStr;
+      case 'Month':
+        return (dateStr: string) => {
+          // dateStr: '2025-06'
+          const d = parse(dateStr, 'yyyy-MM', new Date());
+          return format(d, 'LLLL');
+        };
+      case 'Week':
+        return (dateStr: string) => {
+          // dateStr: '2025-W20'
+          const [year, week] = dateStr.split('-W');
+          // Use parse with 'II' and a date in the correct year
+          const d = parse(week, 'II', new Date(Number(year), 0, 1));
+          const weekStart = startOfWeek(d, { weekStartsOn: 0 });
+          const weekEnd = endOfWeek(d, { weekStartsOn: 0 });
+          const startMonth = format(weekStart, 'MMM');
+          const endMonth = format(weekEnd, 'MMM');
+          if (startMonth !== endMonth) {
+            return `${format(weekStart, 'MMM d')}-${format(weekEnd, 'MMM d')}`;
+          } else {
+            return `${format(weekStart, 'MMM d')}-${format(weekEnd, 'd')}`;
+          }
+        };
+      case 'Hour':
+        return (dateStr: string) => {
+          // dateStr: '2025-06-01 12:00'
+          const d = parse(dateStr, 'yyyy-MM-dd HH:00', new Date());
+          return format(d, 'h a');
+        };
+      case 'Min':
+        return (dateStr: string) => {
+          // dateStr: '2025-06-01 12:34'
+          const d = parse(dateStr, 'yyyy-MM-dd HH:mm', new Date());
+          return format(d, 'h:mm a');
+        };
+      case 'Day':
+      default:
+        return (dateStr: string) => {
+          // dateStr: '2025-06-01'
+          const d = parse(dateStr, 'yyyy-MM-dd', new Date());
+          return format(d, 'MMM d');
+        };
+    }
+  };
+
   return (
     <div className="chart-container">
       <div className="interval-toggle" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', border: '1px solid hsl(var(--border))', padding: '0.5rem', borderRadius: '0.25rem' }}>
@@ -95,7 +144,7 @@ const ChartView: React.FC<ChartViewProps> = memo(({ dataPoints, selectedSeries }
       <ResponsiveContainer width="100%" height={400}>
         <ComposedChart data={transformedData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="date" />
+          <XAxis dataKey="date" tickFormatter={getXAxisLabelFormatter(interval)} />
           <YAxis yAxisId="left" />
           <YAxis yAxisId="right" orientation="right" />
           <Tooltip />

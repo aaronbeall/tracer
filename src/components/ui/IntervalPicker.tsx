@@ -1,7 +1,9 @@
 import React from 'react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
-export type Interval = 'Minute' | 'Hour' | 'Day' | 'Week' | 'Month' | 'Year';
+export type Interval = 'Min' | 'Hour' | 'Day' | 'Week' | 'Month' | 'Year';
+
+const options: Interval[] = ['Min', 'Hour', 'Day', 'Week', 'Month', 'Year'];
 
 interface IntervalPickerProps {
   interval: Interval;
@@ -16,7 +18,7 @@ const IntervalPicker: React.FC<IntervalPickerProps> = ({ interval, onIntervalCha
       onValueChange={(value) => onIntervalChange(value as Interval)}
       className="border border-gray-300 rounded-md"
     >
-      {['Min', 'Hour', 'Day', 'Week', 'Month', 'Year'].map((int) => (
+      {options.map((int) => (
         <ToggleGroupItem
           key={int}
           value={int}

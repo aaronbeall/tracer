@@ -21,7 +21,7 @@ import type { DataPoint } from './services/db';
 import type { TimeFrame } from "./components/TimeFramePicker";
 
 function App() {
-  const navigate = useNavigate(); // Moved inside the App component to ensure it is used within the Router context
+  const navigate = useNavigate();
 
   const {
     dataPoints,
