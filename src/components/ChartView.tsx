@@ -15,9 +15,9 @@ type Interval = 'Day' | 'Week' | 'Month' | 'Year';
 const groupDataByInterval = (data: DataPoint[], interval: Interval, seriesByName: Record<string, { type?: string }>) => {
   const groupedData: Record<string, { date: string, data: Record<string, { numericTotal: number, textValues: Record<string, number> }> }> = {};
 
-  data.sort((a, b) => a.timestamp - b.timestamp);
+  const sortedData = [...data].sort((a, b) => a.timestamp - b.timestamp);
 
-  data.forEach((point) => {
+  sortedData.forEach((point) => {
     const date = new Date(point.timestamp);
     let timeKey: string;
 
