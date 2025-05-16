@@ -97,11 +97,11 @@ const ChartView: React.FC<ChartViewProps> = ({ dataPoints, selectedSeries }) => 
       </div>
       <ResponsiveContainer width="100%" height={400}>
         <ComposedChart data={transformedData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-          <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
-          <YAxis yAxisId="left" stroke="hsl(var(--muted-foreground))" />
-          <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--muted-foreground))" />
-          <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--popover))', color: 'hsl(var(--popover-foreground))' }} />
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="date" />
+          <YAxis yAxisId="left" />
+          <YAxis yAxisId="right" orientation="right" />
+          <Tooltip />
           <Legend wrapperStyle={{ color: 'hsl(var(--foreground))' }} />
 
           {selectedSeries
