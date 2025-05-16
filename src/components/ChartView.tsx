@@ -13,7 +13,7 @@ interface ChartViewProps {
 type Interval = 'Day' | 'Week' | 'Month' | 'Year';
 
 const groupDataByInterval = (data: DataPoint[], interval: Interval, seriesByName: Record<string, { type?: string }>) => {
-  const groupedData: Record<string, { date: string, data: Record<string, { numericTotal: number, textValues: Record<string, number> }> }> = {};
+  const groupedData: Record<string, Record<string, { numericTotal: number, textValues: Record<string, number> }>> = {};
 
   const sortedData = [...data].sort((a, b) => a.timestamp - b.timestamp);
 
@@ -38,47 +38,40 @@ const groupDataByInterval = (data: DataPoint[], interval: Interval, seriesByName
     }
 
     if (!groupedData[timeKey]) {
-      groupedData[timeKey] = { date: timeKey, data: {} };
+      groupedData[timeKey] = {};
     }
 
-    if (!groupedData[timeKey].data[point.series]) {
-      groupedData[timeKey].data[point.series] = { numericTotal: 0, textValues: {} };
+    if (!groupedData[timeKey][point.series]) {
+      groupedData[timeKey][point.series] = { numericTotal: 0, textValues: {} };
     }
 
     const seriesType = seriesByName[point.series]?.type ?? "text";
     if (seriesType === 'numeric') {
-      // Numeric series: sum values
-      groupedData[timeKey].data[point.series].numericTotal += Number(point.value);
+      groupedData[timeKey][point.series].numericTotal += Number(point.value);
     } else if (seriesType === 'text') {
-      // Text series: count occurrences of each unique value within the series
-      if (!groupedData[timeKey].data[point.series].textValues[point.value]) {
-        groupedData[timeKey].data[point.series].textValues[point.value] = 0;
+      if (!groupedData[timeKey][point.series].textValues[point.value]) {
+        groupedData[timeKey][point.series].textValues[point.value] = 0;
       }
-      groupedData[timeKey].data[point.series].textValues[point.value]++;
+      groupedData[timeKey][point.series].textValues[point.value]++;
     }
   });
 
-  // Transform groupedData to include stackId and dataKey for text series
-  const transformedData = Object.values(groupedData).map((entry) => {
-    const newEntry: Record<string, number | string> = { date: entry.date };
-
-    Object.entries(entry.data).forEach(([series, seriesData]) => {
-      // Add numeric totals directly
+  // Transform groupedData to chart data
+  const transformedData = Object.entries(groupedData).map(([timeKey, seriesData]) => {
+    const newEntry: Record<string, number | string> = { date: timeKey };
+    Object.entries(seriesData).forEach(([series, seriesData]) => {
       if (seriesData.numericTotal > 0) {
         newEntry[series] = seriesData.numericTotal;
       }
-
-      // Add text values with their unique keys
       Object.entries(seriesData.textValues).forEach(([value, count]) => {
         const dataKey = `${series}::${value}`;
         newEntry[dataKey] = count;
       });
     });
-
     return newEntry;
   });
 
-  // console.log("Data:", { groupedData, transformedData });
+  console.log({ groupedData, transformedData });
 
   return transformedData;
 };
