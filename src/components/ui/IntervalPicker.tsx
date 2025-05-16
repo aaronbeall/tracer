@@ -1,7 +1,7 @@
 import React from 'react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
-type Interval = 'Day' | 'Week' | 'Month' | 'Year';
+export type Interval = 'Day' | 'Week' | 'Month' | 'Year';
 
 interface IntervalPickerProps {
   interval: Interval;

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, memo } from 'react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart, Bar, Line } from 'recharts';
 import type { DataPoint } from '@/services/db';
-import IntervalPicker from '@/components/ui/IntervalPicker';
+import IntervalPicker, { type Interval } from '@/components/ui/IntervalPicker';
 import { useSeriesByName, useSeriesUniqueValues } from '@/store/dataStore';
 import tinycolor from 'tinycolor2';
 
@@ -9,8 +9,6 @@ interface ChartViewProps {
   dataPoints: DataPoint[];
   selectedSeries: string[];
 }
-
-type Interval = 'Day' | 'Week' | 'Month' | 'Year';
 
 const groupDataByInterval = (data: DataPoint[], interval: Interval, seriesByName: Record<string, { type?: string }>) => {
   const groupedData: Record<string, Record<string, { numericTotal: number, textValues: Record<string, number> }>> = {};
