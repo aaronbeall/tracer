@@ -78,7 +78,7 @@ const groupDataByInterval = (data: DataPoint[], interval: Interval, seriesByName
     return newEntry;
   });
 
-  console.log("Data:", { groupedData, transformedData });
+  // console.log("Data:", { groupedData, transformedData });
 
   return transformedData;
 };
@@ -125,7 +125,6 @@ const ChartView: React.FC<ChartViewProps> = memo(({ dataPoints, selectedSeries }
               (uniqueValuesBySeries[series] || []).map((value, index) => {
                 const baseColor = seriesByName[series]?.color || 'hsl(0, 0%, 50%)';
                 const color = tinycolor(baseColor).spin(index * 30).toHexString();
-                console.log("Bar:", { series, value, color });
                 return (
                   <Bar
                     key={`${series}::${value}`}

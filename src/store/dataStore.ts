@@ -172,7 +172,6 @@ export const useDataStore = create<DataStore>((set, get) => {
 export const useSeriesByName = () => {
   const series = useDataStore((state) => state.series);
   return useMemo(() => {
-    console.log('useSeriesByName');
     return series.reduce((map, s) => {
       map[s.name] = s;
       return map;
@@ -184,7 +183,6 @@ export const useDataBySeries = () => {
   const dataPoints = useDataStore((state) => state.dataPoints);
 
   return useMemo(() => {
-    console.log('useDataBySeries');
     const groupedData: Record<string, DataPoint[]> = {};
 
     for (const dp of dataPoints) {
@@ -203,7 +201,6 @@ export const useSeriesUniqueValues = () => {
   const dataBySeries = useDataBySeries();
 
   return useMemo(() => {
-    console.log('useSeriesUniqueValues');
     const textSeries = series.filter((s) => s.type === 'text');
     const uniqueValuesMap: Record<string, string[]> = {};
 

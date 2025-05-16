@@ -1,10 +1,11 @@
 import React from 'react';
+import { db } from './services/db';
 
 const SettingsView: React.FC = () => {
-  const handleDeleteDatabase = () => {
+  const handleDeleteDatabase = async () => {
     if (window.confirm('Are you sure you want to delete the local database? This action cannot be undone.')) {
-      // Logic to delete the local database
-      console.log('Local database deleted');
+      await db.deleteDatabase();
+      window.location.reload();
     }
   };
 
