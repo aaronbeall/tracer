@@ -20,6 +20,12 @@ const groupDataByInterval = (data: DataPoint[], interval: Interval, seriesByName
     let timeKey: string;
 
     switch (interval) {
+      case 'Minute':
+        timeKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`;
+        break;
+      case 'Hour':
+        timeKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:00`;
+        break;
       case 'Week':
         timeKey = `${date.getFullYear()}-W${Math.ceil(date.getDate() / 7)}`;
         break;
@@ -102,9 +108,10 @@ const ChartView: React.FC<ChartViewProps> = memo(({ dataPoints, selectedSeries }
                 key={series}
                 type="monotone"
                 dataKey={series}
+                connectNulls
+                dot
                 name={series}
                 stroke={seriesByName[series]?.color || 'hsl(0, 0%, 50%)'}
-                dot={false}
                 yAxisId="left"
                 isAnimationActive={false}
               />
@@ -120,7 +127,7 @@ const ChartView: React.FC<ChartViewProps> = memo(({ dataPoints, selectedSeries }
                   <Bar
                     key={`${series}::${value}`}
                     dataKey={`${series}::${value}`}
-                    name={`${series} - ${value}`}
+                    name={` ${value}`}
                     fill={color}
                     stackId={series}
                     yAxisId="right"

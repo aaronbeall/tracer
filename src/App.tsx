@@ -35,7 +35,7 @@ function App() {
   const seriesByName = useSeriesByName();
 
   const [selectedSeries, setSelectedSeries] = useState<string[]>([]);
-  const [timeFrame, setTimeFrame] = useState<TimeFrame>('All Time');
+  const [timeFrame, setTimeFrame] = useState<TimeFrame>('Past Week');
   const [customRange, setCustomRange] = useState<DateRange | undefined>(undefined);
 
   useEffect(() => {
