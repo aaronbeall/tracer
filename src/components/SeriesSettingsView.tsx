@@ -172,7 +172,7 @@ const SeriesSettingsView: React.FC = memo(() => {
                         {currentSeries.emoji ? (
                           <span>{currentSeries.emoji}</span>
                         ) : (
-                          <span className="text-gray-400">○</span>
+                          <span className="text-gray-400">∅</span>
                         )}
                       </Button>
                     </PopoverTrigger>
