@@ -143,10 +143,23 @@ const ChartView: React.FC<ChartViewProps> = memo(({ dataPoints, selectedSeries }
       </div>
       <ResponsiveContainer width="100%" height={400}>
         <ComposedChart data={transformedData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="date" tickFormatter={getXAxisLabelFormatter(interval)} />
-          <YAxis yAxisId="left" />
-          <YAxis yAxisId="right" orientation="right" />
+          <XAxis 
+            dataKey="date" 
+            tickFormatter={getXAxisLabelFormatter(interval)} 
+            tickLine={false} 
+            axisLine={{ stroke: 'var(--muted)', strokeWidth: 2 }}
+          />
+          <YAxis 
+            yAxisId="left" 
+            axisLine={false} 
+            tickLine={false} 
+          />
+          <YAxis 
+            yAxisId="right" 
+            orientation="right" 
+            axisLine={false} 
+            tickLine={false} 
+          />
           <Tooltip
             contentStyle={{
               background: 'var(--card)',
