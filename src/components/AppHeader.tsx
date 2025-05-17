@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Settings } from 'lucide-react';
+import { Settings, User } from 'lucide-react';
 import logo from '@/assets/logo.svg';
+import BuyMeACoffeeLogo from '@/assets/buy-me-a-coffee.svg';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { saveAs } from 'file-saver';
 import { chooseFile } from '@/lib/utils';
@@ -64,17 +65,43 @@ const AppHeader: React.FC = () => {
               <p className="text-sm text-muted-foreground">Track and visualize your series data</p>
             </div>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="rounded-full p-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"><Settings className="w-6 h-6" /></button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setIsAboutOpen(true)}>About</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/settings')}>Settings</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => exportDataAsCSV(dataPoints)}>Export</DropdownMenuItem>
-              <DropdownMenuItem onClick={handleImport}>Import</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="rounded-full p-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"><Settings className="w-6 h-6" /></button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setIsAboutOpen(true)}>About</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/settings')}>Settings</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportDataAsCSV(dataPoints)}>Export</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleImport}>Import</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {/* User menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="rounded-full p-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center">
+                  {/* User avatar placeholder icon from lucide-react */}
+                  <span className="w-8 h-8 bg-slate-300 dark:bg-slate-700 rounded-full flex items-center justify-center">
+                    <User className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+                  </span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <a
+                    href="https://buymeacoffee.com/metamodernmonkey"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2"
+                  >
+                    <img src={BuyMeACoffeeLogo} alt="Buy Me A Coffee" className="h-5 w-5" />
+                    Buy Me A Coffee
+                  </a>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </header>
       <AboutDialog isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
