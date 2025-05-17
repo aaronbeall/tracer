@@ -147,7 +147,27 @@ const ChartView: React.FC<ChartViewProps> = memo(({ dataPoints, selectedSeries }
           <XAxis dataKey="date" tickFormatter={getXAxisLabelFormatter(interval)} />
           <YAxis yAxisId="left" />
           <YAxis yAxisId="right" orientation="right" />
-          <Tooltip />
+          <Tooltip
+            contentStyle={{
+              background: 'var(--card)',
+              border: '1px solid var(--border)',
+              borderRadius: '0.75rem',
+              boxShadow: '0 8px 32px 0 rgba(0,0,0,0.18)',
+              color: 'var(--foreground)',
+              padding: '1rem 1.25rem',
+              minWidth: 180,
+              fontSize: 15,
+              fontWeight: 500,
+              lineHeight: 1,
+            }}
+            labelStyle={{
+              color: 'var(--primary)',
+              fontWeight: 700,
+              fontSize: 16,
+              marginBottom: 8,
+            }}
+            cursor={{ fill: 'var(--muted)', opacity: 0.25 }}
+          />
           <Legend wrapperStyle={{ color: 'hsl(var(--foreground))' }} />
 
           {selectedSeries
