@@ -33,14 +33,15 @@ const SettingsView: React.FC = memo(() => {
 
   return (
     <div>
-      <Button 
-        variant="link" 
-        onClick={() => navigate('/')} 
-        className="mb-4 flex items-center gap-2 w-auto"
-      >
-        <ArrowLeft size={16} />
-        Back to Data
-      </Button>
+      <div className="sticky top-20 z-20 bg-gradient-to-b from-white/90 via-white/80 to-transparent dark:from-slate-900/90 dark:via-slate-950/80 dark:to-transparent backdrop-blur-md mb-4 flex justify-between items-center gap-2 px-2 py-2 border-b border-slate-100 dark:border-slate-800">
+        <Button 
+          variant="link" 
+          onClick={() => navigate('/')} 
+        >
+          <ArrowLeft size={16} />
+          Back to Data
+        </Button>
+      </div>
       <Card className="p-6">
         <Table>
           <TableHeader>
