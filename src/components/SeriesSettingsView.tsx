@@ -168,6 +168,7 @@ const SeriesSettingsView: React.FC = memo(() => {
                     <ColorSwatch
                       color={currentSeries.color || ''}
                       onChange={(color) => handleColorChange(currentSeries.id, color)}
+                      className="w-full sm:w-8"
                     />
                     <Popover>
                       <PopoverTrigger asChild>
