@@ -283,16 +283,19 @@ const CalendarView: React.FC<CalendarViewProps> = memo(({ dataPoints, selectedSe
                       const value = typeof p.value === 'number' ? p.value : String(p.value);
                       const time = format(new Date(p.timestamp), 'h:mm a');
                       return (
-                        <span
-                          key={p.id}
-                          className="flex items-center gap-0.5 px-1 py-0.5 rounded-full border text-[10px] font-semibold shadow-sm mb-0.5"
-                          style={{ borderColor: color, color, backgroundColor: color + '10', lineHeight: 1 }}
-                          title={`${p.series}: ${value} @ ${time}`}
-                        >
-                          {emoji && <span className="text-xs select-none" style={{ lineHeight: 1 }}>{emoji}</span>}
-                          <span className="font-mono" style={{ color }}>{value}</span>
-                          <span className="opacity-70 ml-0.5" style={{ color }}>{time}</span>
-                        </span>
+                        <Tooltip key={p.id}>
+                          <TooltipTrigger asChild>
+                            <span
+                              className="flex items-center gap-0.5 px-1 py-0.5 rounded-full border text-[10px] font-semibold shadow-sm mb-0.5"
+                              style={{ borderColor: color, color, backgroundColor: color + '10', lineHeight: 1 }}
+                            >
+                              {emoji && <span className="text-xs select-none" style={{ lineHeight: 1 }}>{emoji}</span>}
+                              <span className="font-mono" style={{ color }}>{value}</span>
+                              <span className="opacity-70 ml-0.5" style={{ color }}>{time}</span>
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>{p.series}</TooltipContent>
+                        </Tooltip>
                       );
                     })}
                   </div>
