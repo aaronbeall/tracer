@@ -107,12 +107,12 @@ const SeriesSettingsView: React.FC = memo(() => {
     <div>
       <div className="mb-4 flex justify-between items-center gap-2">
         <Button 
-          variant="outline" 
+          variant="link" 
           onClick={() => navigate('/')} 
           className="flex items-center gap-2 w-auto"
         >
           <ArrowLeft size={16} />
-          Back to Data View
+          Back to Data
         </Button>
         <div className="flex items-center gap-2">
           <label htmlFor="sort-select" className="text-sm font-medium text-gray-700">Sort by:</label>

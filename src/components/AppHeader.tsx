@@ -55,20 +55,20 @@ const AppHeader: React.FC = () => {
 
   return (
     <>
-      <header className="py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate('/')}> 
+      <header className="w-full bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 shadow-sm sticky top-0 z-30 backdrop-blur-md">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4 cursor-pointer select-none" onClick={() => navigate('/')}> 
             <img src={logo} alt="Tracer Logo" className="w-10 h-10" />
             <div>
-              <h1 className="text-2xl font-bold">Tracer</h1>
+              <h1 className="text-2xl font-bold leading-tight">Tracer</h1>
               <p className="text-sm text-muted-foreground">Track and visualize your series data</p>
             </div>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Settings className="w-6 h-6 cursor-pointer" />
+              <button className="rounded-full p-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"><Settings className="w-6 h-6" /></button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setIsAboutOpen(true)}>About</DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate('/settings')}>Settings</DropdownMenuItem>
               <DropdownMenuItem onClick={() => exportDataAsCSV(dataPoints)}>Export</DropdownMenuItem>
@@ -77,7 +77,6 @@ const AppHeader: React.FC = () => {
           </DropdownMenu>
         </div>
       </header>
-      
       <AboutDialog isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
     </>
   );

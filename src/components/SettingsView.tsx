@@ -34,12 +34,12 @@ const SettingsView: React.FC = memo(() => {
   return (
     <div>
       <Button 
-        variant="outline" 
+        variant="link" 
         onClick={() => navigate('/')} 
         className="mb-4 flex items-center gap-2 w-auto"
       >
         <ArrowLeft size={16} />
-        Back to Data View
+        Back to Data
       </Button>
       <Card className="p-6">
         <Table>

@@ -1,7 +1,6 @@
 import type { TimeFrame } from "./TimeFramePicker";
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import type { DataSeries } from '@/services/db';
 import { Edit } from 'lucide-react';
 import React from 'react';
@@ -33,49 +32,47 @@ const FilterSection: React.FC<FilterSectionProps> = ({
 }) => {
   const navigate = useNavigate();
   return (
-    <Card className="p-6 mt-6">
-      <div className="flex items-center justify-between">
-        <div className="flex flex-wrap gap-2 items-center">
-          <Badge
-            variant={selectedSeries.length === 0 ? 'default' : 'outline'}
-            onClick={() => onSelectedSeriesChange([])}
-            className="cursor-pointer"
-          >
-            All
-          </Badge>
-          {availableSeries.map((series) => (
-            <SeriesBadge
-              key={series}
-              series={seriesByName[series]}
-              isSelected={selectedSeries.includes(series)}
-              onClick={() => {
-                onSelectedSeriesChange(
-                  selectedSeries.includes(series)
-                    ? selectedSeries.filter((s) => s !== series)
-                    : [...selectedSeries, series]
-                );
-              }}
-            />
-          ))}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="ml-2"
-            onClick={() => navigate('/series-settings')}
-          >
-            <Edit />
-          </Button>
-        </div>
-        <div className="flex items-center gap-4">
-          <TimeFramePicker
-            timeFrame={timeFrame}
-            onTimeFrameChange={onTimeFrameChange}
-            customRange={customRange}
-            onCustomRangeChange={onCustomRangeChange}
+    <div className="flex items-center justify-between">
+      <div className="flex flex-wrap gap-2 items-center">
+        <Badge
+          variant={selectedSeries.length === 0 ? 'default' : 'outline'}
+          onClick={() => onSelectedSeriesChange([])}
+          className="cursor-pointer"
+        >
+          All
+        </Badge>
+        {availableSeries.map((series) => (
+          <SeriesBadge
+            key={series}
+            series={seriesByName[series]}
+            isSelected={selectedSeries.includes(series)}
+            onClick={() => {
+              onSelectedSeriesChange(
+                selectedSeries.includes(series)
+                  ? selectedSeries.filter((s) => s !== series)
+                  : [...selectedSeries, series]
+              );
+            }}
           />
-        </div>
+        ))}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="ml-2"
+          onClick={() => navigate('/series-settings')}
+        >
+          <Edit />
+        </Button>
       </div>
-    </Card>
+      <div className="flex items-center gap-4">
+        <TimeFramePicker
+          timeFrame={timeFrame}
+          onTimeFrameChange={onTimeFrameChange}
+          customRange={customRange}
+          onCustomRangeChange={onCustomRangeChange}
+        />
+      </div>
+    </div>
   );
 };
 

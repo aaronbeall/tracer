@@ -1,5 +1,3 @@
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDataStore, useSeriesByName } from '@/store/dataStore';
 import { isAfter, isBefore, startOfYear, subDays, subMonths, subYears } from 'date-fns';
 import { Calendar, History, LineChart, Table } from 'lucide-react';
@@ -9,16 +7,17 @@ import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import './App.css';
 import AddDataSection from './components/AddDataSection';
-import AppHeader from './components/AppHeader';
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CalendarView from './components/CalendarView';
 import ChartView from './components/ChartView';
 import FilterSection from './components/FilterSection';
-import SeriesSettingsView from './components/SeriesSettingsView';
-import SettingsView from './components/SettingsView';
 import TableView from './components/TableView';
 import TimelineView from './components/TimelineView';
 import type { DataPoint } from './services/db';
 import type { TimeFrame } from "./components/TimeFramePicker";
+import AppHeader from './components/AppHeader';
+import SettingsView from './components/SettingsView';
+import SeriesSettingsView from './components/SeriesSettingsView';
 
 function App() {
   const navigate = useNavigate();
@@ -105,83 +104,89 @@ function App() {
   ), [dataPoints, selectedSeries, filterByTimeFrame]);
 
   return (
-    <div className="container">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 transition-colors">
       <AppHeader />
-
-      <Routes>
-        <Route path="/settings" element={<SettingsView />} />
-        <Route path="/series-settings" element={<SeriesSettingsView />} />
-        <Route
-          path="*"
-          element={
-            <div>
-              <AddDataSection
-                availableSeries={availableSeries}
-              />
-              <FilterSection
-                availableSeries={availableSeries}
-                selectedSeries={selectedSeries}
-                onSelectedSeriesChange={setSelectedSeries}
-                seriesByName={seriesByName}
-                timeFrame={timeFrame}
-                onTimeFrameChange={handleTimeFrameChange}
-                customRange={customRange}
-                onCustomRangeChange={setCustomRange}
-              />
-
-              <Card className="p-6 mt-6">
-                <Tabs
-                  defaultValue={window.location.pathname.slice(1) || "chart"}
-                  onValueChange={(value) => {
-                    navigate(`/${value}`);
-                  }}
-                  className="w-full"
-                >
-                  <TabsList className="grid w-full grid-cols-4 mb-6 bg-muted/50 p-1 rounded-lg">
-                    <TabsTrigger
-                      value="chart"
-                      className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-                    >
-                      <LineChart className="w-4 h-4" />
-                      Chart
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="calendar"
-                      className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-                    >
-                      <Calendar className="w-4 h-4" />
-                      Calendar
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="timeline"
-                      className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-                    >
-                      <History className="w-4 h-4" />
-                      Timeline
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="table"
-                      className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-                    >
-                      <Table className="w-4 h-4" />
-                      Table
-                    </TabsTrigger>
-                  </TabsList>
-                  <div className="rounded-lg border bg-card p-6">
-                    <Routes>
-                      <Route path="/chart" element={<ChartView dataPoints={filteredDataPoints} selectedSeries={viewSeries} />} />
-                      <Route path="/table" element={<TableView dataPoints={filteredDataPoints} onEdit={handleEdit} onDelete={handleDelete} series={series} />} />
-                      <Route path="/calendar" element={<CalendarView dataPoints={filteredDataPoints} selectedSeries={viewSeries} />} />
-                      <Route path="/timeline" element={<TimelineView dataPoints={filteredDataPoints} selectedSeries={viewSeries} />} />
-                      <Route path="*" element={<Navigate to="/chart" replace />} />
-                    </Routes>
+      <main className="max-w-6xl mx-auto px-4 pt-8 pb-12 flex flex-col gap-6">
+        {/* Top Section: Add + Filter */}
+        <Routes>
+          <Route
+            path="/settings"
+            element={
+              <div className="rounded-2xl border bg-white/95 dark:bg-slate-900/95 p-10 shadow-2xl min-h-[500px]">
+                <SettingsView />
+              </div>
+            }
+          />
+          <Route
+            path="/series-settings"
+            element={
+              <div className="rounded-2xl border bg-white/95 dark:bg-slate-900/95 p-10 shadow-2xl min-h-[500px]">
+                <SeriesSettingsView />
+              </div>
+            }
+          />
+          <Route
+            path="*"
+            element={
+              <>
+                <section className="flex flex-col md:flex-row gap-8">
+                  <div className="flex-1 flex items-stretch">
+                    <div className="w-full bg-white/90 dark:bg-slate-900/90 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-center">
+                      <AddDataSection availableSeries={availableSeries} />
+                    </div>
                   </div>
-                </Tabs>
-              </Card>
-            </div>
-          }
-        />
-      </Routes>
+                  <div className="flex-1 flex items-stretch">
+                    <div className="w-full bg-white/90 dark:bg-slate-900/90 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-center">
+                      <FilterSection
+                        availableSeries={availableSeries}
+                        selectedSeries={selectedSeries}
+                        onSelectedSeriesChange={setSelectedSeries}
+                        seriesByName={seriesByName}
+                        timeFrame={timeFrame}
+                        onTimeFrameChange={handleTimeFrameChange}
+                        customRange={customRange}
+                        onCustomRangeChange={setCustomRange}
+                      />
+                    </div>
+                  </div>
+                </section>
+                {/* Main Content: Tabs */}
+                <section className="w-full">
+                  <Tabs
+                    defaultValue={window.location.pathname.slice(1) || "chart"}
+                    onValueChange={(value) => navigate(`/${value}`)}
+                    className="w-full"
+                  >
+                    <TabsList className="grid w-full grid-cols-4 mb-0 bg-white/95 dark:bg-slate-900/95 p-1 rounded-t-2xl border-b border-slate-200 dark:border-slate-800 shadow-md">
+                      <TabsTrigger value="chart" className="flex items-center gap-2 data-[state=active]:bg-primary/90 data-[state=active]:text-white data-[state=active]:shadow-lg transition-colors">
+                        <LineChart className="w-4 h-4" /> Chart
+                      </TabsTrigger>
+                      <TabsTrigger value="calendar" className="flex items-center gap-2 data-[state=active]:bg-primary/90 data-[state=active]:text-white data-[state=active]:shadow-lg transition-colors">
+                        <Calendar className="w-4 h-4" /> Calendar
+                      </TabsTrigger>
+                      <TabsTrigger value="timeline" className="flex items-center gap-2 data-[state=active]:bg-primary/90 data-[state=active]:text-white data-[state=active]:shadow-lg transition-colors">
+                        <History className="w-4 h-4" /> Timeline
+                      </TabsTrigger>
+                      <TabsTrigger value="table" className="flex items-center gap-2 data-[state=active]:bg-primary/90 data-[state=active]:text-white data-[state=active]:shadow-lg transition-colors">
+                        <Table className="w-4 h-4" /> Table
+                      </TabsTrigger>
+                    </TabsList>
+                    <div className="rounded-b-2xl border border-t-0 bg-white/98 dark:bg-slate-900/98 p-10 shadow-2xl min-h-[500px]">
+                      <Routes>
+                        <Route path="/chart" element={<ChartView dataPoints={filteredDataPoints} selectedSeries={viewSeries} />} />
+                        <Route path="/table" element={<TableView dataPoints={filteredDataPoints} onEdit={handleEdit} onDelete={handleDelete} series={series} />} />
+                        <Route path="/calendar" element={<CalendarView dataPoints={filteredDataPoints} selectedSeries={viewSeries} />} />
+                        <Route path="/timeline" element={<TimelineView dataPoints={filteredDataPoints} selectedSeries={viewSeries} />} />
+                        <Route path="*" element={<Navigate to="/chart" replace />} />
+                      </Routes>
+                    </div>
+                  </Tabs>
+                </section>
+              </>
+            }
+          />
+        </Routes>
+      </main>
     </div>
   );
 }
