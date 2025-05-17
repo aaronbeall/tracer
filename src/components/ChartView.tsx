@@ -1,14 +1,21 @@
-import React, { useState, useMemo, memo } from 'react';
+import React, { useState, useMemo, memo, useEffect } from 'react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart, Bar, Line } from 'recharts';
 import type { DataPoint } from '@/services/db';
 import IntervalPicker, { type Interval } from '@/components/ui/IntervalPicker';
+import { TimeFramePicker, type TimeFrame } from '../components/TimeFramePicker';
+import type { DateRange } from 'react-day-picker';
 import { useSeriesByName, useSeriesUniqueValues } from '@/store/dataStore';
 import tinycolor from 'tinycolor2';
 import { format, startOfWeek, endOfWeek, parse } from 'date-fns';
+import FilterSection from './FilterSection';
 
 interface ChartViewProps {
   dataPoints: DataPoint[];
   selectedSeries: string[];
+  timeFrame: TimeFrame;
+  onTimeFrameChange: (value: TimeFrame) => void;
+  customRange: DateRange | undefined;
+  onCustomRangeChange: (range: DateRange | undefined) => void;
 }
 
 const groupDataByInterval = (data: DataPoint[], interval: Interval, seriesByName: Record<string, { type?: string }>) => {
@@ -81,7 +88,7 @@ const groupDataByInterval = (data: DataPoint[], interval: Interval, seriesByName
   return transformedData;
 };
 
-const ChartView: React.FC<ChartViewProps> = memo(({ dataPoints, selectedSeries }) => {
+const ChartView: React.FC<ChartViewProps> = memo(({ dataPoints, selectedSeries, timeFrame, onTimeFrameChange, customRange, onCustomRangeChange, availableSeries }) => {
   const [interval, setInterval] = useState<Interval>('Day');
   const seriesByName = useSeriesByName();
   const uniqueValuesBySeries = useSeriesUniqueValues();
@@ -138,8 +145,18 @@ const ChartView: React.FC<ChartViewProps> = memo(({ dataPoints, selectedSeries }
 
   return (
     <div className="chart-container">
-      <div className="interval-toggle" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', border: '1px solid hsl(var(--border))', padding: '0.5rem', borderRadius: '0.25rem' }}>
-        <IntervalPicker interval={interval} onIntervalChange={setInterval} />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
+        <div className="interval-toggle" style={{ display: 'flex', justifyContent: 'flex-end', border: '1px solid hsl(var(--border))', padding: '0.5rem', borderRadius: '0.25rem' }}>
+          <IntervalPicker interval={interval} onIntervalChange={setInterval} />
+        </div>
+        <div className="timeframe-toggle">
+          <TimeFramePicker
+            timeFrame={timeFrame}
+            onTimeFrameChange={onTimeFrameChange}
+            customRange={customRange}
+            onCustomRangeChange={onCustomRangeChange}
+          />
+        </div>
       </div>
       <ResponsiveContainer width="100%" height={400}>
         <ComposedChart data={transformedData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>

@@ -1,23 +1,16 @@
-import type { TimeFrame } from "./TimeFramePicker";
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { DataSeries } from '@/services/db';
 import { Edit } from 'lucide-react';
 import React from 'react';
-import type { DateRange } from 'react-day-picker';
 import { useNavigate } from 'react-router-dom';
 import SeriesBadge from './SeriesBadge';
-import { TimeFramePicker } from './TimeFramePicker';
 
 interface FilterSectionProps {
   availableSeries: string[];
   selectedSeries: string[];
   onSelectedSeriesChange: (series: string[]) => void;
   seriesByName: Record<string, DataSeries>;
-  timeFrame: TimeFrame;
-  onTimeFrameChange: (timeFrame: TimeFrame) => void;
-  customRange: DateRange | undefined;
-  onCustomRangeChange: (range: DateRange | undefined) => void;
 }
 
 const FilterSection: React.FC<FilterSectionProps> = ({
@@ -25,10 +18,6 @@ const FilterSection: React.FC<FilterSectionProps> = ({
   selectedSeries,
   onSelectedSeriesChange,
   seriesByName,
-  timeFrame,
-  onTimeFrameChange,
-  customRange,
-  onCustomRangeChange,
 }) => {
   const navigate = useNavigate();
   return (
@@ -37,9 +26,9 @@ const FilterSection: React.FC<FilterSectionProps> = ({
         <Badge
           variant={selectedSeries.length === 0 ? 'default' : 'outline'}
           onClick={() => onSelectedSeriesChange([])}
-          className="cursor-pointer px-4 py-1 rounded-full text-base font-medium shadow-sm transition-colors border border-transparent focus-visible:ring-2 focus-visible:ring-primary/40"
+          className="cursor-pointer px-4 py-1 rounded-full text-base font-medium shadow-sm transition-colors border border-transparent focus-visible:ring-2 focus-visible:ring-primary/40 flex items-center gap-1"
         >
-          All
+          <span className="w-4 h-4 mr-1 text-lg font-black leading-none text-yellow-400 dark:text-yellow-300 select-none" style={{fontFamily: 'monospace', lineHeight: 1}}>*</span> All
         </Badge>
         {availableSeries.map((series) => (
           <SeriesBadge
@@ -63,14 +52,6 @@ const FilterSection: React.FC<FilterSectionProps> = ({
         >
           <Edit />
         </Button>
-      </div>
-      <div className="flex items-center gap-4">
-        <TimeFramePicker
-          timeFrame={timeFrame}
-          onTimeFrameChange={onTimeFrameChange}
-          customRange={customRange}
-          onCustomRangeChange={onCustomRangeChange}
-        />
       </div>
     </div>
   );

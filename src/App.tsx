@@ -97,11 +97,24 @@ function App() {
     }
   }, [timeFrame, customRange]);
 
-  const filteredDataPoints = useMemo(() => filterByTimeFrame(
+  // Filter by series selection only
+  const seriesFilteredDataPoints = useMemo(() => (
     selectedSeries.length === 0
       ? dataPoints // Show all data points when 'All' is selected
       : dataPoints.filter((p) => selectedSeries.includes(p.series))
-  ), [dataPoints, selectedSeries, filterByTimeFrame]);
+  ), [dataPoints, selectedSeries]);
+
+  // Filter by series selection and time frame (for chart)
+  const timeFrameFilteredDataPoints = useMemo(() => filterByTimeFrame(seriesFilteredDataPoints), [seriesFilteredDataPoints, filterByTimeFrame]);
+
+  // Only show series with data in the current chart time frame when on the chart view
+  const chartAvailableSeries = useMemo(() => {
+    // Get the set of series that have at least one data point in the timeFrame-filtered (by time only) dataPoints
+    const timeFiltered = filterByTimeFrame(dataPoints);
+    const present = new Set<string>();
+    timeFiltered.forEach((p) => present.add(p.series));
+    return availableSeries.filter((s) => present.has(s));
+  }, [availableSeries, dataPoints, filterByTimeFrame]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 transition-colors">
@@ -137,16 +150,24 @@ function App() {
                   </div>
                   <div className="flex-1 flex items-stretch">
                     <div className="w-full bg-white/90 dark:bg-slate-900/90 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-center">
-                      <FilterSection
-                        availableSeries={availableSeries}
-                        selectedSeries={selectedSeries}
-                        onSelectedSeriesChange={setSelectedSeries}
-                        seriesByName={seriesByName}
-                        timeFrame={timeFrame}
-                        onTimeFrameChange={handleTimeFrameChange}
-                        customRange={customRange}
-                        onCustomRangeChange={setCustomRange}
-                      />
+                      <Routes>
+                        <Route path="/chart" element={
+                          <FilterSection
+                            availableSeries={chartAvailableSeries}
+                            selectedSeries={selectedSeries}
+                            onSelectedSeriesChange={setSelectedSeries}
+                            seriesByName={seriesByName}
+                          />
+                        } />
+                        <Route path="*" element={
+                          <FilterSection
+                            availableSeries={availableSeries}
+                            selectedSeries={selectedSeries}
+                            onSelectedSeriesChange={setSelectedSeries}
+                            seriesByName={seriesByName}
+                          />
+                        } />
+                      </Routes>
                     </div>
                   </div>
                 </section>
@@ -173,10 +194,19 @@ function App() {
                     </TabsList>
                     <div className="rounded-b-2xl border border-t-0 bg-white/98 dark:bg-slate-900/98 p-10 shadow-2xl min-h-[500px]">
                       <Routes>
-                        <Route path="/chart" element={<ChartView dataPoints={filteredDataPoints} selectedSeries={viewSeries} />} />
-                        <Route path="/table" element={<TableView dataPoints={filteredDataPoints} onEdit={handleEdit} onDelete={handleDelete} series={series} />} />
-                        <Route path="/calendar" element={<CalendarView dataPoints={filteredDataPoints} selectedSeries={viewSeries} />} />
-                        <Route path="/timeline" element={<TimelineView dataPoints={filteredDataPoints} selectedSeries={viewSeries} />} />
+                        <Route 
+                          path="/chart" 
+                          element={<ChartView 
+                          dataPoints={timeFrameFilteredDataPoints} 
+                          selectedSeries={viewSeries}
+                          timeFrame={timeFrame}
+                          onTimeFrameChange={handleTimeFrameChange}
+                          customRange={customRange}
+                          onCustomRangeChange={setCustomRange}
+                        />} />
+                        <Route path="/table" element={<TableView dataPoints={seriesFilteredDataPoints} onEdit={handleEdit} onDelete={handleDelete} series={series} />} />
+                        <Route path="/calendar" element={<CalendarView dataPoints={seriesFilteredDataPoints} selectedSeries={viewSeries} />} />
+                        <Route path="/timeline" element={<TimelineView dataPoints={seriesFilteredDataPoints} selectedSeries={viewSeries} />} />
                         <Route path="*" element={<Navigate to="/chart" replace />} />
                       </Routes>
                     </div>
