@@ -3,7 +3,7 @@ import type { DataPoint, DataSeries } from '@/services/db';
 import { Button } from '@/components/ui/button';
 import { Trash, ChevronUp, ChevronDown } from 'lucide-react';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { createColumnHelper, useReactTable, getCoreRowModel, getSortedRowModel } from '@tanstack/react-table';
+import { createColumnHelper, useReactTable, getCoreRowModel, getSortedRowModel, getPaginationRowModel } from '@tanstack/react-table';
 import type { SortingState } from '@tanstack/react-table';
 import { useSeriesByName } from '@/store/dataStore';
 
@@ -21,6 +21,8 @@ const TableView: React.FC<TableViewProps> = memo(({ dataPoints, onEdit, onDelete
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'timestamp', desc: true },
   ]);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
+  const pageCount = Math.ceil(dataPoints.length / pagination.pageSize);
 
   const columnHelper = createColumnHelper<DataPoint>();
 
@@ -139,12 +141,18 @@ const TableView: React.FC<TableViewProps> = memo(({ dataPoints, onEdit, onDelete
   const table = useReactTable({
     data: dataPoints,
     columns,
-    state: { sorting },
+    state: { sorting, pagination },
     getRowId: (row) => row.id.toString(),
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    manualPagination: false,
   });
+
+  // Add a page size selector
+  const pageSizeOptions = [10, 20, 50, 100];
 
   return (
     <div className="table-container overflow-x-auto">
@@ -185,6 +193,43 @@ const TableView: React.FC<TableViewProps> = memo(({ dataPoints, onEdit, onDelete
           ))}
         </tbody>
       </table>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-2 px-2 bg-white border-t border-gray-200">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">Rows per page:</span>
+          <select
+            className="border rounded px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            value={pagination.pageSize}
+            onChange={e => setPagination(p => ({ ...p, pageSize: Number(e.target.value), pageIndex: 0 }))}
+          >
+            {pageSizeOptions.map(size => (
+              <option key={size} value={size}>{size}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-center justify-between w-full sm:w-auto">
+          <span className="text-xs text-gray-500 mr-4">
+            Page {table.getState().pagination.pageIndex + 1} of {pageCount}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 });
