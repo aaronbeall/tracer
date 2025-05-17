@@ -37,7 +37,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
         <Badge
           variant={selectedSeries.length === 0 ? 'default' : 'outline'}
           onClick={() => onSelectedSeriesChange([])}
-          className="cursor-pointer"
+          className="cursor-pointer px-4 py-1 rounded-full text-base font-medium shadow-sm transition-colors border border-transparent focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           All
         </Badge>
@@ -58,7 +58,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
         <Button
           variant="ghost"
           size="icon"
-          className="ml-2"
+          className="ml-2 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm hover:bg-slate-100 dark:hover:bg-slate-800"
           onClick={() => navigate('/series-settings')}
         >
           <Edit />
