@@ -6,6 +6,7 @@ export interface DataPoint {
   series: string;
   value: number | string;
   timestamp: number;
+  description?: string;
 }
 
 export interface DataSeries {
@@ -20,6 +21,7 @@ export interface DataSeries {
   updatedAt: number;
   dataAddedAt?: number;
   archived?: boolean;
+  favorite?: boolean;
 }
 
 interface TracerDB {
