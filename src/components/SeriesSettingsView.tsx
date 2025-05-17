@@ -140,94 +140,102 @@ const SeriesSettingsView: React.FC = memo(() => {
       {sortedSeries.map((currentSeries) => {
         const hasEdits = Object.keys(editedSeries.find((e) => e.id === currentSeries.id) || {}).length > 1;
         return (
-          <Card key={currentSeries.id} className="p-4 mb-4">
-            <div className="flex flex-col">
-              <div className="flex items-center gap-4 relative justify-between">
-                <div className="flex items-center gap-4">
-                  <Input
-                    value={currentSeries.name || ''}
-                    onChange={(e) => updateEditedSeries(currentSeries.id, { name: e.target.value })}
-                    placeholder="Series Name"
-                    className={`pr-10 flex-1 ${currentSeries.error ? 'border-red-500' : ''}`}
-                  />
-                  <Select
-                    value={currentSeries.type}
-                    onValueChange={(value) => updateEditedSeries(currentSeries.id, { type: value as DataSeries['type'] })}
-                  >
-                    <SelectTrigger className={`w-32 ${!currentSeries.type ? 'text-gray-400' : ''}`}>
-                      <span>{{ numeric: "Numeric", text: "Text", none: "Set type..." }[currentSeries.type ?? "none"]}</span>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="numeric">Numeric</SelectItem>
-                      <SelectItem value="text">Text</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <ColorSwatch
-                    color={currentSeries.color || ''}
-                    onChange={(color) => handleColorChange(currentSeries.id, color)}
-                  />
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button className="p-2 text-2xl" size="icon" variant="ghost">
-                        {currentSeries.emoji ? (
-                          <span>{currentSeries.emoji}</span>
-                        ) : (
-                          <span className="text-gray-400">∅</span>
+          <Card key={currentSeries.id} className="p-6 mb-6 rounded-2xl shadow-lg border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 transition-all">
+            <div className="flex flex-col gap-4">
+              <div className="relative w-full">
+                {/* Responsive: all inputs in a column on mobile, row on sm+; more menu is last flex item */}
+                <div className="flex flex-row items-start gap-2 sm:gap-4 w-full">
+                  {/* Left: all inputs except more menu */}
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 flex-1">
+                    <Input
+                      value={currentSeries.name || ''}
+                      onChange={(e) => updateEditedSeries(currentSeries.id, { name: e.target.value })}
+                      placeholder="Series Name"
+                      className={`pr-10 text-lg font-semibold ${currentSeries.error ? 'border-red-500 focus:ring-red-200 dark:focus:ring-red-900' : ''} flex-1`}
+                    />
+                    <Select
+                      value={currentSeries.type}
+                      onValueChange={(value) => updateEditedSeries(currentSeries.id, { type: value as DataSeries['type'] })}
+                    >
+                      <SelectTrigger className={`w-full sm:w-36 ${!currentSeries.type ? 'text-gray-400' : ''}`}>
+                        <span>{ { numeric: "Numeric", text: "Text", none: "Set type..." }[currentSeries.type ?? "none"] }</span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="numeric">Numeric</SelectItem>
+                        <SelectItem value="text">Text</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <ColorSwatch
+                      color={currentSeries.color || ''}
+                      onChange={(color) => handleColorChange(currentSeries.id, color)}
+                    />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button className="p-2 text-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-full shadow-sm transition-all w-auto" size="icon" variant="ghost">
+                          {currentSeries.emoji ? (
+                            <span>{currentSeries.emoji}</span>
+                          ) : (
+                            <span className="text-gray-400">∅</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0 w-full h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl">
+                        {currentSeries.emoji && (
+                          <div className="p-2 border-b border-gray-200 dark:border-slate-700">
+                            <Button
+                              variant="destructive"
+                              className='w-full'
+                              size="sm"
+                              onClick={() => handleEmojiChange(currentSeries.id, undefined)}
+                            >
+                              <Trash/> Remove Emoji
+                            </Button>
+                          </div>
                         )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-0 w-full h-full bg-gray-950">
-                      {currentSeries.emoji && (
-                        <div className="p-2 border-b border-gray-200">
-                          <Button
-                            variant="destructive"
-                            className='w-full'
-                            size="sm"
-                            onClick={() => handleEmojiChange(currentSeries.id, undefined)}
-                          >
-                            <Trash/> Remove Emoji
-                          </Button>
-                        </div>
-                      )}
-                      <Picker
-                        autoFocus
-                        onEmojiSelect={(emoji: { native: string }) => handleEmojiChange(currentSeries.id, emoji.native)}
-                      />
-                    </PopoverContent>
-                  </Popover>
+                        <Picker
+                          autoFocus
+                          onEmojiSelect={(emoji: { native: string }) => handleEmojiChange(currentSeries.id, emoji.native)}
+                          theme="auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  {/* Right: more menu */}
+                  <div className="flex-shrink-0">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-full shadow-sm transition-all" size="icon" variant='ghost'>
+                          <MoreHorizontal size={16} />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                        <DropdownMenuItem
+                          onClick={() =>
+                            setShowDescriptionForSeries((prev) => ({
+                              ...prev,
+                              [currentSeries.id]: !isDescriptionShowing(currentSeries),
+                            }))
+                          }
+                          className="flex items-center gap-2"
+                        >
+                          {isDescriptionShowing(currentSeries)
+                            ? 'Hide Description'
+                            : currentSeries.description
+                            ? 'Show Description'
+                            : 'Add Description'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          variant="destructive"
+                          className="flex items-center gap-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900"
+                          onClick={() => handleDelete(currentSeries.id)}
+                        >
+                          <Trash size={16} />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button className="p-2" size="icon" variant='ghost'>
-                      <MoreHorizontal size={16} />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() =>
-                        setShowDescriptionForSeries((prev) => ({
-                          ...prev,
-                          [currentSeries.id]: !isDescriptionShowing(currentSeries),
-                        }))
-                      }
-                      className="flex items-center gap-2"
-                    >
-                      {isDescriptionShowing(currentSeries)
-                        ? 'Hide Description'
-                        : currentSeries.description
-                        ? 'Show Description'
-                        : 'Add Description'}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      variant="destructive"
-                      className="flex items-center gap-2"
-                      onClick={() => handleDelete(currentSeries.id)}
-                    >
-                      <Trash size={16} />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
               {isDescriptionShowing(currentSeries) && (
                 <textarea
