@@ -157,6 +157,7 @@ function App() {
                             selectedSeries={selectedSeries}
                             onSelectedSeriesChange={setSelectedSeries}
                             seriesByName={seriesByName}
+                            dataPoints={timeFrameFilteredDataPoints}
                           />
                         } />
                         <Route path="*" element={
@@ -165,6 +166,7 @@ function App() {
                             selectedSeries={selectedSeries}
                             onSelectedSeriesChange={setSelectedSeries}
                             seriesByName={seriesByName}
+                            dataPoints={seriesFilteredDataPoints}
                           />
                         } />
                       </Routes>
