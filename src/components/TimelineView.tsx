@@ -84,20 +84,17 @@ const TimelineView: React.FC<TimelineViewProps> = memo(({ dataPoints, selectedSe
           return (
             <TimelineItem key={key} position="right">
               <TimelineOppositeContent className="pr-4 flex flex-col items-end justify-start min-w-[90px]">
-                {isNewDay ? (
-                  <>
-                    <span className="text-base font-bold text-slate-700 dark:text-slate-200 leading-tight mb-0.5">
-                      {format(eventDate, 'MMM d, yyyy')}
-                    </span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 leading-tight">
-                      {format(eventDate, 'h:mm a')}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-xs text-slate-500 dark:text-slate-400 leading-tight">
-                    {format(eventDate, 'h:mm a')}
+                {isNewDay && (
+                  <span className="text-base font-bold text-slate-700 dark:text-slate-200 leading-tight mb-0.5">
+                    {format(eventDate, 'MMM d, yyyy')}
                   </span>
                 )}
+                <span
+                  className="text-xs text-slate-500 dark:text-slate-400 leading-tight"
+                  title={format(eventDate, 'h:mm:ss a')}
+                >
+                  {format(eventDate, 'h:mm a')}
+                </span>
               </TimelineOppositeContent>
               <TimelineSeparator>
                 {isCreated ? (

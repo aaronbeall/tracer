@@ -99,11 +99,18 @@ export const Autocomplete: React.FC<AutocompleteProps> = ({ options, value, onCh
                 onChange(option);
                 setOpen(false);
               }}
-              className={`px-4 py-2 cursor-pointer text-sm text-gray-700 hover:bg-gray-100 ${
+              className={`px-4 py-2 cursor-pointer text-sm flex items-center gap-2 text-gray-700 hover:bg-gray-100 transition-colors duration-75 ${
                 index === highlightedIndex ? 'bg-gray-200' : ''
               }`}
             >
-              {getHighlightedText(option, value)}
+              <span className="flex-1 truncate">
+                {getHighlightedText(option, value)}
+              </span>
+              {option === value && (
+                <svg className="w-4 h-4 text-blue-500 ml-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
             </li>
           ))}
         </ul>

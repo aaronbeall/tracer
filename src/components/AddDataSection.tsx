@@ -24,7 +24,7 @@ const AddDataSection: React.FC<AddDataSectionProps> = ({ availableSeries }) => {
     if (seriesInput && valueInput) {
       await addDataPoint({ series: seriesInput, value: parseTextValue(valueInput) });
       toast.success('Data added successfully!');
-      setSeriesInput('');
+      // setSeriesInput('');
       setValueInput('');
     }
   };
