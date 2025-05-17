@@ -29,18 +29,23 @@ export const useDataStore = create<DataStore>((set, get) => {
     if (!existingSeries) {
       const randomHue = Math.floor(Math.random() * 360);
       const randomColor = tinycolor({ h: randomHue, s: 70, l: 50 }).toHexString();
-      const id = await db.addSeries(seriesName, randomColor);
+      const seriesType = typeof initialValue === 'number' 
+          ? 'numeric' 
+          : typeof initialValue == 'string' 
+            ? 'text' 
+            : undefined;
+      const id = await db.addSeries({
+        name: seriesName,
+        color: randomColor,
+        type: seriesType
+      });
       const newSeries: DataSeries = {
         id: id as number,
         name: seriesName,
         color: randomColor,
         createdAt: Date.now(),
         updatedAt: Date.now(),
-        type: typeof initialValue === 'number' 
-          ? 'numeric' 
-          : typeof initialValue == 'string' 
-            ? 'text' 
-            : undefined,
+        type: seriesType
       };
       set((state) => ({ series: [...state.series, newSeries] }));
       return newSeries;

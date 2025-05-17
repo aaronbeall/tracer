@@ -63,7 +63,7 @@ class DatabaseService {
 
   async addDataPoint(series: string, value: number | string, timestamp: number = Date.now()) {
     if (!this.db) await this.init();
-    const datapoint = {
+    const datapoint: Omit<DataPoint, "id"> = {
       series,
       value,
       timestamp,
@@ -90,7 +90,7 @@ class DatabaseService {
     await this.db!.delete('datapoints', id);
   }
 
-  async addSeries(name: string, color: string, unit?: string, description?: string, type?: 'numeric' | 'text') {
+  async addSeries({ name, color, unit, description, type }: Omit<DataSeries, 'id' | 'createdAt' | 'updatedAt'>) {
     if (!this.db) await this.init();
     const series = {
       name,
