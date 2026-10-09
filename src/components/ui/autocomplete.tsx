@@ -61,7 +61,7 @@ export const Autocomplete: React.FC<AutocompleteProps> = ({ options, value, onCh
       <>
         {parts.map((part, index) =>
           part.toLowerCase() === highlight.toLowerCase() ? (
-            <span key={index} className="bg-yellow-200 font-semibold">
+            <span key={index} className="underline decoration-2 underline-offset-2 font-semibold">
               {part}
             </span>
           ) : (
@@ -87,11 +87,11 @@ export const Autocomplete: React.FC<AutocompleteProps> = ({ options, value, onCh
         />
         <ChevronsUpDownIcon
           onClick={() => setOpen(!open)}
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 cursor-pointer text-gray-500"
+          className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 cursor-pointer text-muted-foreground"
         />
       </div>
       {open && filteredOptions.length > 0 && (
-        <ul className="absolute left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-40 overflow-y-auto">
+        <ul className="absolute left-0 right-0 bg-popover border border-border rounded-md shadow-lg mt-1 max-h-40 overflow-y-auto z-10">
           {filteredOptions.map((option, index) => (
             <li
               key={option}
@@ -99,15 +99,15 @@ export const Autocomplete: React.FC<AutocompleteProps> = ({ options, value, onCh
                 onChange(option);
                 setOpen(false);
               }}
-              className={`px-4 py-2 cursor-pointer text-sm flex items-center gap-2 text-gray-700 hover:bg-gray-100 transition-colors duration-75 ${
-                index === highlightedIndex ? 'bg-gray-200' : ''
+              className={`px-4 py-2 cursor-pointer text-sm flex items-center gap-2 text-popover-foreground hover:bg-accent transition-colors duration-75 ${
+                index === highlightedIndex ? 'bg-accent' : ''
               }`}
             >
               <span className="flex-1 truncate">
                 {getHighlightedText(option, value)}
               </span>
               {option === value && (
-                <svg className="w-4 h-4 text-blue-500 ml-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-foreground ml-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               )}

@@ -89,6 +89,17 @@ const TableView: React.FC<TableViewProps> = memo(({ dataPoints, onEdit, onDelete
         </div>
       ),
     }),
+    columnHelper.accessor('category', {
+      header: 'Category',
+      cell: (info) => (
+        <input
+          type="text"
+          defaultValue={info.getValue() || ''}
+          placeholder="—"
+          onBlur={(e) => handleCellEdit(info.row.index, info.column.id, e.target.value)}
+        />
+      ),
+    }),
     columnHelper.accessor('value', {
       header: 'Value',
       cell: (info) => {
@@ -156,14 +167,14 @@ const TableView: React.FC<TableViewProps> = memo(({ dataPoints, onEdit, onDelete
 
   return (
     <div className="table-container overflow-x-auto">
-      <table className="min-w-full border-collapse border border-gray-300">
-        <thead className="bg-gray-100">
+      <table className="min-w-full border-collapse border border-border">
+        <thead className="bg-muted">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id} className="border-b">
               {headerGroup.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="px-4 py-2 text-left text-sm font-medium text-gray-700 cursor-pointer"
+                  className="px-4 py-2 text-left text-sm font-medium text-muted-foreground cursor-pointer select-none"
                   onClick={header.column.getToggleSortingHandler()}
                 >
                   {typeof header.column.columnDef.header === 'function'
@@ -178,11 +189,11 @@ const TableView: React.FC<TableViewProps> = memo(({ dataPoints, onEdit, onDelete
         </thead>
         <tbody>
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="border-b hover:bg-gray-50">
+            <tr key={row.id} className="border-b border-border hover:bg-accent/50">
               {row.getVisibleCells().map((cell) => (
                 <td
                   key={cell.id}
-                  className="px-4 py-2 text-sm text-gray-600"
+                  className="px-4 py-2 text-sm font-mono text-foreground"
                 >
                   {typeof cell.column.columnDef.cell === 'function'
                     ? cell.column.columnDef.cell(cell.getContext())
@@ -193,11 +204,11 @@ const TableView: React.FC<TableViewProps> = memo(({ dataPoints, onEdit, onDelete
           ))}
         </tbody>
       </table>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-2 px-2 bg-white border-t border-gray-200">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-2 px-2 bg-card border-t border-border">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">Rows per page:</span>
+          <span className="text-xs text-muted-foreground">Rows per page:</span>
           <select
-            className="border rounded px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            className="border border-border rounded px-2 py-1 text-xs text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-ring/40"
             value={pagination.pageSize}
             onChange={e => setPagination(p => ({ ...p, pageSize: Number(e.target.value), pageIndex: 0 }))}
           >
@@ -207,7 +218,7 @@ const TableView: React.FC<TableViewProps> = memo(({ dataPoints, onEdit, onDelete
           </select>
         </div>
         <div className="flex items-center justify-between w-full sm:w-auto">
-          <span className="text-xs text-gray-500 mr-4">
+          <span className="text-xs text-muted-foreground mr-4">
             Page {table.getState().pagination.pageIndex + 1} of {pageCount}
           </span>
           <div className="flex gap-2">

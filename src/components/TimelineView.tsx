@@ -1,4 +1,4 @@
-import React, { memo, useRef, useState, useCallback } from 'react';
+import React, { memo, useRef, useState } from 'react';
 import type { DataPoint } from '@/services/db';
 import { Timeline, TimelineItem, TimelineSeparator, TimelineConnector, TimelineContent, TimelineDot, TimelineOppositeContent } from '@mui/lab';
 import { format } from 'date-fns';
@@ -85,12 +85,12 @@ const TimelineView: React.FC<TimelineViewProps> = memo(({ dataPoints, selectedSe
             <TimelineItem key={key} position="right">
               <TimelineOppositeContent className="pr-4 flex flex-col items-end justify-start min-w-[90px]">
                 {isNewDay && (
-                  <span className="text-base font-bold text-slate-700 dark:text-slate-200 leading-tight mb-0.5">
+                  <span className="text-base font-bold text-foreground leading-tight mb-0.5">
                     {format(eventDate, 'MMM d, yyyy')}
                   </span>
                 )}
                 <span
-                  className="text-xs text-slate-500 dark:text-slate-400 leading-tight"
+                  className="text-xs text-muted-foreground leading-tight"
                   title={format(eventDate, 'h:mm:ss a')}
                 >
                   {format(eventDate, 'h:mm a')}
@@ -98,17 +98,17 @@ const TimelineView: React.FC<TimelineViewProps> = memo(({ dataPoints, selectedSe
               </TimelineOppositeContent>
               <TimelineSeparator>
                 {isCreated ? (
-                  <TimelineDot variant="outlined" style={{ borderColor: series?.color || 'black', background: 'transparent' }} />
+                  <TimelineDot variant="outlined" style={{ borderColor: series?.color || 'var(--foreground)', background: 'transparent' }} />
                 ) : (
-                  <TimelineDot color="primary" style={{ backgroundColor: series?.color || 'black' }} />
+                  <TimelineDot color="primary" style={{ backgroundColor: series?.color || 'var(--foreground)' }} />
                 )}
                 <TimelineConnector />
               </TimelineSeparator>
               <TimelineContent>
                 {isCreated ? (
-                  <div className="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-300 shadow-sm">
+                  <div className="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-secondary border border-border text-xs text-muted-foreground shadow-sm">
                     <span className="font-semibold" style={{ color: series?.color || undefined }}>{series?.name}</span>
-                    <span className="px-1 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold ml-1 uppercase tracking-wide text-[10px]">series created</span>
+                    <span className="px-1 py-0.5 rounded bg-accent text-foreground font-semibold ml-1 uppercase tracking-wide text-[10px]">series created</span>
                     {series?.emoji && <span className="ml-1">{series.emoji}</span>}
                   </div>
                 ) : point && (
@@ -134,6 +134,9 @@ const TimelineView: React.FC<TimelineViewProps> = memo(({ dataPoints, selectedSe
                         {String(point.value)}
                       </span>
                     )}
+                    {point.category && (
+                      <span className="font-sans text-sm font-medium text-white/80 px-0.5">{point.category}</span>
+                    )}
                     {series?.emoji && (
                       <span className="text-base ml-1" style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.18)' }}>{series.emoji}</span>
                     )}
@@ -152,12 +155,12 @@ const TimelineView: React.FC<TimelineViewProps> = memo(({ dataPoints, selectedSe
       </Timeline>
       {visibleCount < sortedPoints.length && (
         <div className="flex justify-center py-4">
-          <Spinner className="text-blue-500" />
+          <Spinner className="text-muted-foreground" />
         </div>
       )}
       {visibleCount >= sortedPoints.length && (
         <div className="flex justify-center py-4">
-          <span className="text-xs text-slate-400">No more data</span>
+          <span className="text-xs text-muted-foreground">No more data</span>
         </div>
       )}
     </div>

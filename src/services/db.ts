@@ -5,6 +5,8 @@ export interface DataPoint {
   id: number;
   series: string;
   value: number | string;
+  /** For 'categorized' series only: a text label alongside the numeric value (e.g. Activity Name next to a Duration value). */
+  category?: string;
   timestamp: number;
   description?: string;
 }
@@ -16,12 +18,15 @@ export interface DataSeries {
   emoji?: string;
   unit?: string;
   description?: string;
-  type?: 'numeric' | 'text';
+  /** 'categorized' pairs a numeric value with a text category on every point, e.g. Exercise = Duration + Activity Name. */
+  type?: 'numeric' | 'text' | 'categorized';
   createdAt: number;
   updatedAt: number;
   dataAddedAt?: number;
   archived?: boolean;
   favorite?: boolean;
+  goal?: { target: number; direction: 'at-least' | 'at-most' };
+  aggregation?: 'sum' | 'avg';
 }
 
 interface TracerDB {
@@ -63,12 +68,14 @@ class DatabaseService {
     });
   }
 
-  async addDataPoint(series: string, value: number | string, timestamp: number = Date.now()) {
+  async addDataPoint(series: string, value: number | string, timestamp: number = Date.now(), description?: string, category?: string) {
     if (!this.db) await this.init();
     const datapoint: Omit<DataPoint, "id"> = {
       series,
       value,
       timestamp,
+      ...(description !== undefined ? { description } : {}),
+      ...(category !== undefined ? { category } : {}),
     };
     return this.db!.add('datapoints', datapoint);
   }
@@ -92,18 +99,14 @@ class DatabaseService {
     await this.db!.delete('datapoints', id);
   }
 
-  async addSeries({ name, color, unit, description, type }: Omit<DataSeries, 'id' | 'createdAt' | 'updatedAt'>) {
+  async addSeries(series: Omit<DataSeries, 'id' | 'createdAt' | 'updatedAt'>) {
     if (!this.db) await this.init();
-    const series = {
-      name,
-      color,
-      unit,
-      description,
-      type,
+    const record = {
+      ...series,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
-    return this.db!.add('series', series);
+    return this.db!.add('series', record);
   }
 
   async getAllSeries(): Promise<DataSeries[]> {

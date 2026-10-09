@@ -3,6 +3,8 @@ import { useDataStore } from '@/store/dataStore';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, X, MoreHorizontal, AlertCircle, Trash } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
@@ -10,6 +12,16 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { toast } from 'sonner'; // Corrected import for toast notifications
 import type { DataSeries } from '@/services/db';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 import Picker from '@emoji-mart/react';
 import ColorSwatch from './ColorSwatch';
 import { Select, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select';
@@ -22,6 +34,7 @@ const SeriesSettingsView: React.FC = memo(() => {
   const navigate = useNavigate();
   const [sortOption, setSortOption] = useState<'createdAt' | 'updatedAt' | 'dataAddedAt' | 'name'>('createdAt');
   const [showDescriptionForSeries, setShowDescriptionForSeries] = useState<Record<number, boolean>>({});
+  const [seriesPendingDeleteId, setSeriesPendingDeleteId] = useState<number | null>(null);
 
   const displaySeries = useMemo(() => {
     return series.map((s) => {
@@ -70,9 +83,8 @@ const SeriesSettingsView: React.FC = memo(() => {
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this series?')) {
-      await deleteSeries(id);
-    }
+    await deleteSeries(id);
+    setSeriesPendingDeleteId(null);
   };
 
   const handleCancel = (id: number) => {
@@ -105,16 +117,16 @@ const SeriesSettingsView: React.FC = memo(() => {
 
   return (
     <div>
-      <div className="sticky top-20 z-20 bg-gradient-to-b from-white/90 via-white/80 to-transparent dark:from-slate-900/90 dark:via-slate-950/80 dark:to-transparent backdrop-blur-md mb-4 flex justify-between items-center gap-2 px-2 py-2 border-b border-slate-100 dark:border-slate-800">
-        <Button 
-          variant="link" 
-          onClick={() => navigate('/')} 
+      <div className="sticky top-20 z-20 bg-background/95 backdrop-blur-md mb-4 flex justify-between items-center gap-2 px-2 py-2 border-b border-border">
+        <Button
+          variant="link"
+          onClick={() => navigate('/')}
         >
           <ArrowLeft size={16} />
           Back to Data
         </Button>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
-          <label htmlFor="sort-select" className="hidden sm:inline text-sm font-medium text-gray-700 tracking-wide">Sort by:</label>
+          <label htmlFor="sort-select" className="hidden sm:inline text-sm font-medium text-muted-foreground tracking-wide">Sort by:</label>
           <Select value={sortOption} onValueChange={(value) => setSortOption(value as 'createdAt' | 'updatedAt' | 'dataAddedAt' | 'name')}>
             <SelectTrigger id="sort-select" className="w-48">
               <span>{
@@ -139,7 +151,7 @@ const SeriesSettingsView: React.FC = memo(() => {
       {sortedSeries.map((currentSeries) => {
         const hasEdits = Object.keys(editedSeries.find((e) => e.id === currentSeries.id) || {}).length > 1;
         return (
-          <Card key={currentSeries.id} className="p-6 mb-6 rounded-2xl shadow-lg border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 transition-all">
+          <Card key={currentSeries.id} className="p-6 mb-6 rounded-lg shadow-sm border border-border bg-card transition-all">
             <div className="flex flex-col gap-4">
               <div className="relative w-full">
                 {/* Responsive: all inputs in a column on mobile, row on sm+; more menu is last flex item */}
@@ -150,18 +162,19 @@ const SeriesSettingsView: React.FC = memo(() => {
                       value={currentSeries.name || ''}
                       onChange={(e) => updateEditedSeries(currentSeries.id, { name: e.target.value })}
                       placeholder="Series Name"
-                      className={`pr-10 text-lg font-semibold ${currentSeries.error ? 'border-red-500 focus:ring-red-200 dark:focus:ring-red-900' : ''} flex-1`}
+                      className={`pr-10 text-lg font-display font-semibold ${currentSeries.error ? 'border-destructive focus:ring-destructive/20' : ''} flex-1`}
                     />
                     <Select
                       value={currentSeries.type}
                       onValueChange={(value) => updateEditedSeries(currentSeries.id, { type: value as DataSeries['type'] })}
                     >
-                      <SelectTrigger className={`w-full sm:w-36 ${!currentSeries.type ? 'text-gray-400' : ''}`}>
-                        <span>{ { numeric: "Numeric", text: "Text", none: "Set type..." }[currentSeries.type ?? "none"] }</span>
+                      <SelectTrigger className={`w-full sm:w-44 ${!currentSeries.type ? 'text-muted-foreground' : ''}`}>
+                        <span>{ { numeric: "Numeric", text: "Text", categorized: "Text + Number", none: "Set type..." }[currentSeries.type ?? "none"] }</span>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="numeric">Numeric</SelectItem>
                         <SelectItem value="text">Text</SelectItem>
+                        <SelectItem value="categorized">Text + Number</SelectItem>
                       </SelectContent>
                     </Select>
                     <ColorSwatch
@@ -171,17 +184,17 @@ const SeriesSettingsView: React.FC = memo(() => {
                     />
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button className="p-2 text-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-full shadow-sm transition-all w-auto" size="icon" variant="ghost">
+                        <Button className="p-2 text-2xl bg-secondary hover:bg-accent border border-border rounded-full shadow-sm transition-all w-auto" size="icon" variant="ghost">
                           {currentSeries.emoji ? (
                             <span>{currentSeries.emoji}</span>
                           ) : (
-                            <span className="text-gray-400">∅</span>
+                            <span className="text-muted-foreground">∅</span>
                           )}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="p-0 w-full h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl">
+                      <PopoverContent className="p-0 w-full h-full bg-popover border border-border rounded-lg shadow-xl">
                         {currentSeries.emoji && (
-                          <div className="p-2 border-b border-gray-200 dark:border-slate-700">
+                          <div className="p-2 border-b border-border">
                             <Button
                               variant="destructive"
                               className='w-full'
@@ -204,11 +217,11 @@ const SeriesSettingsView: React.FC = memo(() => {
                   <div className="flex-shrink-0">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-full shadow-sm transition-all" size="icon" variant='ghost'>
+                        <Button className="p-2 bg-secondary hover:bg-accent border border-border rounded-full shadow-sm transition-all" size="icon" variant='ghost'>
                           <MoreHorizontal size={16} />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                      <DropdownMenuContent align="end" className="rounded-lg shadow-lg border border-border bg-popover">
                         <DropdownMenuItem
                           onClick={() =>
                             setShowDescriptionForSeries((prev) => ({
@@ -226,8 +239,8 @@ const SeriesSettingsView: React.FC = memo(() => {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           variant="destructive"
-                          className="flex items-center gap-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900"
-                          onClick={() => handleDelete(currentSeries.id)}
+                          className="flex items-center gap-2 text-destructive hover:bg-destructive/10"
+                          onClick={() => setSeriesPendingDeleteId(currentSeries.id)}
                         >
                           <Trash size={16} />
                           Delete
@@ -237,27 +250,91 @@ const SeriesSettingsView: React.FC = memo(() => {
                   </div>
                 </div>
               </div>
+              {(currentSeries.type === 'numeric' || currentSeries.type === 'categorized') && (
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 border-t border-border">
+                  <div className="flex items-center gap-1.5">
+                    <Label className="text-xs text-muted-foreground whitespace-nowrap">Unit</Label>
+                    <Input
+                      value={currentSeries.unit || ''}
+                      onChange={(e) => updateEditedSeries(currentSeries.id, { unit: e.target.value || undefined })}
+                      placeholder="kg, $, reps..."
+                      className="w-24 h-8 text-sm"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Label className="text-xs text-muted-foreground whitespace-nowrap">Same-day values</Label>
+                    <Select
+                      value={currentSeries.aggregation ?? 'sum'}
+                      onValueChange={(value) => updateEditedSeries(currentSeries.id, { aggregation: value as DataSeries['aggregation'] })}
+                    >
+                      <SelectTrigger className="w-28 h-8 text-sm">
+                        <span>{currentSeries.aggregation === 'avg' ? 'Average' : 'Sum'}</span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sum">Sum</SelectItem>
+                        <SelectItem value="avg">Average</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Label className="text-xs text-muted-foreground whitespace-nowrap">Goal</Label>
+                    <Select
+                      value={currentSeries.goal?.direction ?? 'none'}
+                      onValueChange={(value) => {
+                        if (value === 'none') {
+                          updateEditedSeries(currentSeries.id, { goal: undefined });
+                        } else {
+                          updateEditedSeries(currentSeries.id, {
+                            goal: { target: currentSeries.goal?.target ?? 0, direction: value as 'at-least' | 'at-most' },
+                          });
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-28 h-8 text-sm">
+                        <span>{currentSeries.goal?.direction === 'at-least' ? 'At least' : currentSeries.goal?.direction === 'at-most' ? 'At most' : 'No goal'}</span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No goal</SelectItem>
+                        <SelectItem value="at-least">At least</SelectItem>
+                        <SelectItem value="at-most">At most</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {currentSeries.goal && (
+                      <Input
+                        type="number"
+                        value={currentSeries.goal.target}
+                        onChange={(e) =>
+                          updateEditedSeries(currentSeries.id, {
+                            goal: { target: Number(e.target.value), direction: currentSeries.goal!.direction },
+                          })
+                        }
+                        className="w-20 h-8 text-sm"
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
               {isDescriptionShowing(currentSeries) && (
-                <textarea
+                <Textarea
                   value={currentSeries.description || ''}
                   onChange={(e) => updateEditedSeries(currentSeries.id, { description: e.target.value })}
                   placeholder="Series Description"
-                  className="w-full p-2 border border-gray-300 rounded-md text-sm mt-4"
+                  className="text-sm mt-4"
                 />
               )}
-              <div className="text-xs text-gray-500 mt-4 flex items-center space-x-2 border-t border-gray-200 pt-2">
+              <div className="text-xs text-muted-foreground mt-4 flex items-center space-x-2 border-t border-border pt-2">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <p className="font-light">Created: <span className="text-gray-400">{formatDistanceToNow(new Date(currentSeries.createdAt), { addSuffix: true })}</span></p>
+                    <p className="font-light">Created: <span className="font-mono">{formatDistanceToNow(new Date(currentSeries.createdAt), { addSuffix: true })}</span></p>
                   </TooltipTrigger>
                   <TooltipContent>
                     {new Date(currentSeries.createdAt).toLocaleString()}
                   </TooltipContent>
                 </Tooltip>
-                <span className="text-gray-300">|</span>
+                <span className="text-border">|</span>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <p className="font-light">Modified: <span className="text-gray-400">{formatDistanceToNow(new Date(currentSeries.updatedAt), { addSuffix: true })}</span></p>
+                    <p className="font-light">Modified: <span className="font-mono">{formatDistanceToNow(new Date(currentSeries.updatedAt), { addSuffix: true })}</span></p>
                   </TooltipTrigger>
                   <TooltipContent>
                     {new Date(currentSeries.updatedAt).toLocaleString()}
@@ -265,10 +342,10 @@ const SeriesSettingsView: React.FC = memo(() => {
                 </Tooltip>
                 {currentSeries.dataAddedAt && (
                   <>
-                    <span className="text-gray-300">|</span>
+                    <span className="text-border">|</span>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <p className="font-light">Data Added: <span className="text-gray-400">{formatDistanceToNow(new Date(currentSeries.dataAddedAt), { addSuffix: true })}</span></p>
+                        <p className="font-light">Data Added: <span className="font-mono">{formatDistanceToNow(new Date(currentSeries.dataAddedAt), { addSuffix: true })}</span></p>
                       </TooltipTrigger>
                       <TooltipContent>
                         {new Date(currentSeries.dataAddedAt).toLocaleString()}
@@ -278,25 +355,24 @@ const SeriesSettingsView: React.FC = memo(() => {
                 )}
               </div>
               {hasEdits && (
-                <div className="mt-2 -mx-4 -mb-4 p-4 bg-yellow-100 border-t border-yellow-300 rounded-b-xl">
+                <div className="mt-2 -mx-4 -mb-4 p-4 bg-secondary border-t-2 border-t-foreground/15 rounded-b-lg">
                   <div className="flex items-center flex-wrap gap-2">
                     <div className="flex gap-2">
                       <Button
                         onClick={() => handleSave(currentSeries.id)}
                         disabled={!currentSeries.isValid}
-                        className="bg-green-500 text-white"
                       >
                         <Check size={16} /> Save
                       </Button>
                       <Button
-                        variant="destructive"
+                        variant="outline"
                         onClick={() => handleCancel(currentSeries.id)}
                       >
                         <X size={16} /> Cancel
                       </Button>
                     </div>
                     {currentSeries.error && (
-                      <div className="text-red-500 flex items-center">
+                      <div className="text-destructive flex items-center">
                         <AlertCircle size={16} className="inline-block mr-2" />
                         {currentSeries.error}
                       </div>
@@ -308,6 +384,25 @@ const SeriesSettingsView: React.FC = memo(() => {
           </Card>
         );
       })}
+      <AlertDialog open={seriesPendingDeleteId !== null} onOpenChange={(open) => !open && setSeriesPendingDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete series?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{series.find((s) => s.id === seriesPendingDeleteId)?.name}"? This will also delete all of its data points. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              onClick={() => seriesPendingDeleteId !== null && handleDelete(seriesPendingDeleteId)}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 });

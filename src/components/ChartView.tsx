@@ -1,13 +1,12 @@
-import React, { useState, useMemo, memo, useEffect } from 'react';
-import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart, Bar, Line } from 'recharts';
-import type { DataPoint } from '@/services/db';
+import React, { useState, useMemo, memo } from 'react';
+import { XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, ComposedChart, Bar, Line } from 'recharts';
+import type { DataPoint, DataSeries } from '@/services/db';
 import IntervalPicker, { type Interval } from '@/components/ui/IntervalPicker';
 import { TimeFramePicker, type TimeFrame } from '../components/TimeFramePicker';
 import type { DateRange } from 'react-day-picker';
 import { useSeriesByName, useSeriesUniqueValues } from '@/store/dataStore';
 import tinycolor from 'tinycolor2';
 import { format, startOfWeek, endOfWeek, parse } from 'date-fns';
-import FilterSection from './FilterSection';
 
 interface ChartViewProps {
   dataPoints: DataPoint[];
@@ -18,8 +17,13 @@ interface ChartViewProps {
   onCustomRangeChange: (range: DateRange | undefined) => void;
 }
 
-const groupDataByInterval = (data: DataPoint[], interval: Interval, seriesByName: Record<string, { type?: string }>) => {
-  const groupedData: Record<string, Record<string, { numericTotal: number, textValues: Record<string, number> }>> = {};
+const groupDataByInterval = (data: DataPoint[], interval: Interval, seriesByName: Record<string, DataSeries>) => {
+  const groupedData: Record<string, Record<string, {
+    numericTotal: number,
+    numericCount: number,
+    textValues: Record<string, number>,
+    categoryTotals: Record<string, { total: number; count: number }>,
+  }>> = {};
 
   const sortedData = [...data].sort((a, b) => a.timestamp - b.timestamp);
 
@@ -54,17 +58,24 @@ const groupDataByInterval = (data: DataPoint[], interval: Interval, seriesByName
     }
 
     if (!groupedData[timeKey][point.series]) {
-      groupedData[timeKey][point.series] = { numericTotal: 0, textValues: {} };
+      groupedData[timeKey][point.series] = { numericTotal: 0, numericCount: 0, textValues: {}, categoryTotals: {} };
     }
 
     const seriesType = seriesByName[point.series]?.type ?? "text";
     if (seriesType === 'numeric') {
       groupedData[timeKey][point.series].numericTotal += Number(point.value);
+      groupedData[timeKey][point.series].numericCount += 1;
     } else if (seriesType === 'text') {
       if (!groupedData[timeKey][point.series].textValues[point.value]) {
         groupedData[timeKey][point.series].textValues[point.value] = 0;
       }
       groupedData[timeKey][point.series].textValues[point.value]++;
+    } else if (seriesType === 'categorized') {
+      const category = (point.category || 'Uncategorized').trim() || 'Uncategorized';
+      const bucket = groupedData[timeKey][point.series].categoryTotals;
+      if (!bucket[category]) bucket[category] = { total: 0, count: 0 };
+      bucket[category].total += Number(point.value);
+      bucket[category].count += 1;
     }
   });
 
@@ -72,23 +83,27 @@ const groupDataByInterval = (data: DataPoint[], interval: Interval, seriesByName
   const transformedData = Object.entries(groupedData).map(([timeKey, seriesData]) => {
     const newEntry: Record<string, number | string> = { date: timeKey };
     Object.entries(seriesData).forEach(([series, seriesData]) => {
-      if (seriesData.numericTotal > 0) {
-        newEntry[series] = seriesData.numericTotal;
+      if (seriesData.numericCount > 0) {
+        newEntry[series] = seriesByName[series]?.aggregation === 'avg'
+          ? seriesData.numericTotal / seriesData.numericCount
+          : seriesData.numericTotal;
       }
       Object.entries(seriesData.textValues).forEach(([value, count]) => {
         const dataKey = `${series}::${value}`;
         newEntry[dataKey] = count;
       });
+      Object.entries(seriesData.categoryTotals).forEach(([category, { total, count }]) => {
+        const dataKey = `${series}::${category}`;
+        newEntry[dataKey] = seriesByName[series]?.aggregation === 'avg' ? total / count : total;
+      });
     });
     return newEntry;
   });
 
-  console.log({ groupedData, transformedData });
-
   return transformedData;
 };
 
-const ChartView: React.FC<ChartViewProps> = memo(({ dataPoints, selectedSeries, timeFrame, onTimeFrameChange, customRange, onCustomRangeChange, availableSeries }) => {
+const ChartView: React.FC<ChartViewProps> = memo(({ dataPoints, selectedSeries, timeFrame, onTimeFrameChange, customRange, onCustomRangeChange }) => {
   const [interval, setInterval] = useState<Interval>('Day');
   const seriesByName = useSeriesByName();
   const uniqueValuesBySeries = useSeriesUniqueValues();
@@ -146,7 +161,7 @@ const ChartView: React.FC<ChartViewProps> = memo(({ dataPoints, selectedSeries, 
   return (
     <div className="chart-container">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
-        <div className="interval-toggle" style={{ display: 'flex', justifyContent: 'flex-end', border: '1px solid hsl(var(--border))', padding: '0.5rem', borderRadius: '0.25rem' }}>
+        <div className="interval-toggle" style={{ display: 'flex', justifyContent: 'flex-end', border: '1px solid var(--border)', padding: '0.5rem', borderRadius: '0.25rem' }}>
           <IntervalPicker interval={interval} onIntervalChange={setInterval} />
         </div>
         <div className="timeframe-toggle">
@@ -164,18 +179,21 @@ const ChartView: React.FC<ChartViewProps> = memo(({ dataPoints, selectedSeries, 
             dataKey="date" 
             tickFormatter={getXAxisLabelFormatter(interval)} 
             tickLine={false} 
-            axisLine={{ stroke: 'var(--muted)', strokeWidth: 2 }}
+            axisLine={{ stroke: 'var(--border)', strokeWidth: 1 }}
+            tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
           />
-          <YAxis 
-            yAxisId="left" 
-            axisLine={false} 
-            tickLine={false} 
+          <YAxis
+            yAxisId="left"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
           />
-          <YAxis 
-            yAxisId="right" 
-            orientation="right" 
-            axisLine={false} 
-            tickLine={false} 
+          <YAxis
+            yAxisId="right"
+            orientation="right"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
           />
           <Tooltip
             contentStyle={{
@@ -198,10 +216,10 @@ const ChartView: React.FC<ChartViewProps> = memo(({ dataPoints, selectedSeries, 
             }}
             cursor={{ fill: 'var(--muted)', opacity: 0.25 }}
           />
-          <Legend wrapperStyle={{ color: 'hsl(var(--foreground))' }} />
+          <Legend wrapperStyle={{ color: 'var(--foreground)', fontSize: 13 }} />
 
           {selectedSeries
-            .filter((series) => seriesByName[series]?.type === 'text')
+            .filter((series) => seriesByName[series]?.type === 'text' || seriesByName[series]?.type === 'categorized')
             .flatMap((series) =>
               (uniqueValuesBySeries[series] || []).map((value, index) => {
                 const baseColor = seriesByName[series]?.color || 'hsl(0, 0%, 50%)';

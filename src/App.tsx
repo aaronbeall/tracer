@@ -1,6 +1,6 @@
 import { useDataStore, useSeriesByName } from '@/store/dataStore';
 import { isAfter, isBefore, startOfYear, subDays, subMonths, subYears } from 'date-fns';
-import { Calendar, History, LineChart, Table } from 'lucide-react';
+import { Calendar, History, LineChart, Table, Sparkles } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
@@ -13,6 +13,7 @@ import ChartView from './components/ChartView';
 import FilterSection from './components/FilterSection';
 import TableView from './components/TableView';
 import TimelineView from './components/TimelineView';
+import InsightsView from './components/InsightsView';
 import type { DataPoint } from './services/db';
 import type { TimeFrame } from "./components/TimeFramePicker";
 import AppHeader from './components/AppHeader';
@@ -66,6 +67,12 @@ function App() {
     }
   }, [deleteDataPoint]);
 
+  const handleToggleSeries = useCallback((series: string) => {
+    setSelectedSeries((prev) =>
+      prev.includes(series) ? prev.filter((s) => s !== series) : [...prev, series]
+    );
+  }, []);
+
   const handleTimeFrameChange = (value: string) => {
     if (['All Time', 'Past Week', 'Past Month', 'Past Year', 'YTD', 'Custom...'].includes(value)) {
       setTimeFrame(value as TimeFrame);
@@ -117,15 +124,15 @@ function App() {
   }, [availableSeries, dataPoints, filterByTimeFrame]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 transition-colors">
+    <div className="min-h-screen bg-background transition-colors">
       <AppHeader />
-      <main className="max-w-6xl mx-auto px-4 pt-8 pb-12 flex flex-col gap-6">
+      <main className="max-w-6xl mx-auto px-4 pt-6 pb-12 flex flex-col gap-5">
         {/* Top Section: Add + Filter */}
         <Routes>
           <Route
             path="/settings"
             element={
-              <div className="rounded-2xl border bg-white/95 dark:bg-slate-900/95 p-10 shadow-2xl min-h-[500px]">
+              <div className="rounded-lg border border-border bg-card p-10 shadow-sm min-h-[500px]">
                 <SettingsView />
               </div>
             }
@@ -133,7 +140,7 @@ function App() {
           <Route
             path="/series-settings"
             element={
-              <div className="rounded-2xl border bg-white/95 dark:bg-slate-900/95 p-10 shadow-2xl min-h-[500px]">
+              <div className="rounded-lg border border-border bg-card p-10 shadow-sm min-h-[500px]">
                 <SeriesSettingsView />
               </div>
             }
@@ -142,35 +149,31 @@ function App() {
             path="*"
             element={
               <>
-                <section className="flex flex-col md:flex-row gap-8">
-                  <div className="flex-1 flex items-stretch">
-                    <div className="w-full bg-white/90 dark:bg-slate-900/90 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-center">
-                      <AddDataSection availableSeries={availableSeries} />
-                    </div>
+                <section className="bg-card rounded-lg shadow-sm border border-border">
+                  <div className="p-4 md:p-5">
+                    <AddDataSection availableSeries={availableSeries} />
                   </div>
-                  <div className="flex-1 flex items-stretch">
-                    <div className="w-full bg-white/90 dark:bg-slate-900/90 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-center">
-                      <Routes>
-                        <Route path="/chart" element={
-                          <FilterSection
-                            availableSeries={chartAvailableSeries}
-                            selectedSeries={selectedSeries}
-                            onSelectedSeriesChange={setSelectedSeries}
-                            seriesByName={seriesByName}
-                            dataPoints={timeFrameFilteredDataPoints}
-                          />
-                        } />
-                        <Route path="*" element={
-                          <FilterSection
-                            availableSeries={availableSeries}
-                            selectedSeries={selectedSeries}
-                            onSelectedSeriesChange={setSelectedSeries}
-                            seriesByName={seriesByName}
-                            dataPoints={seriesFilteredDataPoints}
-                          />
-                        } />
-                      </Routes>
-                    </div>
+                  <div className="border-t border-border p-4 md:p-5">
+                    <Routes>
+                      <Route path="/chart" element={
+                        <FilterSection
+                          availableSeries={chartAvailableSeries}
+                          selectedSeries={selectedSeries}
+                          onSelectedSeriesChange={setSelectedSeries}
+                          seriesByName={seriesByName}
+                          dataPoints={timeFrameFilteredDataPoints}
+                        />
+                      } />
+                      <Route path="*" element={
+                        <FilterSection
+                          availableSeries={availableSeries}
+                          selectedSeries={selectedSeries}
+                          onSelectedSeriesChange={setSelectedSeries}
+                          seriesByName={seriesByName}
+                          dataPoints={seriesFilteredDataPoints}
+                        />
+                      } />
+                    </Routes>
                   </div>
                 </section>
                 {/* Main Content: Tabs */}
@@ -180,21 +183,24 @@ function App() {
                     onValueChange={(value) => navigate(`/${value}`)}
                     className="w-full"
                   >
-                    <TabsList className="grid w-full grid-cols-4 mb-0 bg-white/95 dark:bg-slate-900/95 p-1 rounded-t-2xl border-b border-slate-200 dark:border-slate-800 shadow-md">
-                      <TabsTrigger value="chart" className="flex items-center gap-2 data-[state=active]:bg-primary/90 data-[state=active]:text-white data-[state=active]:shadow-lg transition-colors">
+                    <TabsList className="grid w-full grid-cols-5 mb-0 h-auto bg-transparent p-0 border-b border-border rounded-none gap-0">
+                      <TabsTrigger value="chart" className="flex items-center gap-2 rounded-none border-b-2 border-transparent px-3 py-2.5 text-muted-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:font-semibold transition-colors">
                         <LineChart className="w-4 h-4" /> Chart
                       </TabsTrigger>
-                      <TabsTrigger value="calendar" className="flex items-center gap-2 data-[state=active]:bg-primary/90 data-[state=active]:text-white data-[state=active]:shadow-lg transition-colors">
+                      <TabsTrigger value="insights" className="flex items-center gap-2 rounded-none border-b-2 border-transparent px-3 py-2.5 text-muted-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:font-semibold transition-colors">
+                        <Sparkles className="w-4 h-4" /> Insights
+                      </TabsTrigger>
+                      <TabsTrigger value="calendar" className="flex items-center gap-2 rounded-none border-b-2 border-transparent px-3 py-2.5 text-muted-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:font-semibold transition-colors">
                         <Calendar className="w-4 h-4" /> Calendar
                       </TabsTrigger>
-                      <TabsTrigger value="timeline" className="flex items-center gap-2 data-[state=active]:bg-primary/90 data-[state=active]:text-white data-[state=active]:shadow-lg transition-colors">
+                      <TabsTrigger value="timeline" className="flex items-center gap-2 rounded-none border-b-2 border-transparent px-3 py-2.5 text-muted-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:font-semibold transition-colors">
                         <History className="w-4 h-4" /> Timeline
                       </TabsTrigger>
-                      <TabsTrigger value="table" className="flex items-center gap-2 data-[state=active]:bg-primary/90 data-[state=active]:text-white data-[state=active]:shadow-lg transition-colors">
+                      <TabsTrigger value="table" className="flex items-center gap-2 rounded-none border-b-2 border-transparent px-3 py-2.5 text-muted-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:font-semibold transition-colors">
                         <Table className="w-4 h-4" /> Table
                       </TabsTrigger>
                     </TabsList>
-                    <div className="rounded-b-2xl border border-t-0 bg-white/98 dark:bg-slate-900/98 p-10 shadow-2xl min-h-[500px]">
+                    <div className="rounded-b-lg border border-t-0 border-border bg-card p-6 md:p-10 shadow-sm min-h-[500px]">
                       <Routes>
                         <Route 
                           path="/chart" 
@@ -209,6 +215,14 @@ function App() {
                         <Route path="/table" element={<TableView dataPoints={seriesFilteredDataPoints} onEdit={handleEdit} onDelete={handleDelete} series={series} />} />
                         <Route path="/calendar" element={<CalendarView dataPoints={seriesFilteredDataPoints} selectedSeries={viewSeries} />} />
                         <Route path="/timeline" element={<TimelineView dataPoints={seriesFilteredDataPoints} selectedSeries={viewSeries} />} />
+                        <Route path="/insights" element={
+                          <InsightsView
+                            dataPoints={seriesFilteredDataPoints}
+                            selectedSeries={viewSeries}
+                            activeSeries={selectedSeries}
+                            onToggleSeries={handleToggleSeries}
+                          />
+                        } />
                         <Route path="*" element={<Navigate to="/chart" replace />} />
                       </Routes>
                     </div>

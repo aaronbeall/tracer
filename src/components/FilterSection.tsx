@@ -6,6 +6,7 @@ import { Edit } from 'lucide-react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import SeriesBadge from './SeriesBadge';
+import { computeSeriesStats } from '@/lib/seriesStats';
 
 interface FilterSectionProps {
   availableSeries: string[];
@@ -23,14 +24,12 @@ const FilterSection: React.FC<FilterSectionProps> = ({
   dataPoints,
 }) => {
   const navigate = useNavigate();
-  // Count data points per series
-  const seriesCounts = React.useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const point of dataPoints) {
-      counts[point.series] = (counts[point.series] || 0) + 1;
-    }
-    return counts;
-  }, [dataPoints]);
+
+  // Per-series stats (count, last value, numeric range/trend/streak, or most common text value)
+  const seriesStats = React.useMemo(
+    () => computeSeriesStats(dataPoints, seriesByName),
+    [dataPoints, seriesByName]
+  );
 
   return (
     <div className="flex items-center justify-between">
@@ -38,15 +37,16 @@ const FilterSection: React.FC<FilterSectionProps> = ({
         <Badge
           variant={selectedSeries.length === 0 ? 'default' : 'outline'}
           onClick={() => onSelectedSeriesChange([])}
-          className="cursor-pointer px-4 py-1 rounded-full text-base font-medium shadow-sm transition-colors border border-transparent focus-visible:ring-2 focus-visible:ring-primary/40 flex items-center gap-1"
+          className="cursor-pointer px-3 py-1 rounded-full text-sm font-medium transition-colors border focus-visible:ring-2 focus-visible:ring-ring/40"
         >
-          <span className="w-4 h-4 mr-1 text-lg font-black leading-none text-yellow-400 dark:text-yellow-300 select-none" style={{fontFamily: 'monospace', lineHeight: 1}}>*</span> All
+          All
         </Badge>
         {availableSeries.map((series) => (
           <div className="relative" key={series}>
             <SeriesBadge
               series={seriesByName[series]}
               isSelected={selectedSeries.includes(series)}
+              stats={seriesStats[series]}
               onClick={() => {
                 onSelectedSeriesChange(
                   selectedSeries.includes(series)
@@ -55,9 +55,9 @@ const FilterSection: React.FC<FilterSectionProps> = ({
                 );
               }}
             />
-            {seriesCounts[series] > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-gray-200 text-gray-700 text-[10px] font-semibold rounded-full px-1 py-0.5 shadow-sm border border-white select-none">
-                {seriesCounts[series]}
+            {seriesStats[series]?.count > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-secondary text-foreground font-mono text-[10px] font-semibold rounded-full px-1 py-0.5 shadow-sm border border-card select-none">
+                {seriesStats[series].count}
               </span>
             )}
           </div>
@@ -65,10 +65,10 @@ const FilterSection: React.FC<FilterSectionProps> = ({
         <Button
           variant="ghost"
           size="icon"
-          className="ml-2 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm hover:bg-slate-100 dark:hover:bg-slate-800"
+          className="ml-2 rounded-full border border-border hover:bg-accent"
           onClick={() => navigate('/series-settings')}
         >
-          <Edit />
+          <Edit className="text-muted-foreground" />
         </Button>
       </div>
     </div>

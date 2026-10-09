@@ -2,88 +2,99 @@ import React, { useState } from 'react';
 import { Settings, User } from 'lucide-react';
 import logo from '@/assets/logo.svg';
 import BuyMeACoffeeLogo from '@/assets/buy-me-a-coffee.svg';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { saveAs } from 'file-saver';
 import { chooseFile } from '@/lib/utils';
+import { stringifyCSV } from '@/lib/csv';
+import { buildBackup, parseBackup } from '@/lib/backup';
 import type { DataPoint } from '@/services/db';
 import AboutDialog from './AboutDialog';
+import ImportCsvDialog from './ImportCsvDialog';
+import ThemeToggle from './ThemeToggle';
 import { useNavigate } from 'react-router-dom';
 import { useDataStore } from '@/store/dataStore';
+import { toast } from 'sonner';
 
 function exportDataAsCSV(dataPoints: DataPoint[]) {
-  const csvContent = [
+  const csvContent = stringifyCSV([
     ['Series', 'Value', 'Timestamp'],
     ...dataPoints.map(({ series, value, timestamp }) => [series, value, new Date(timestamp).toISOString()]),
-  ]
-    .map((row) => row.join(','))
-    .join('\n');
+  ]);
 
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  saveAs(blob, 'data.csv');
-}
-
-function importDataFromCSV(file: File, onImport: (importedData: Partial<DataPoint>[]) => void) {
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    const text = event.target?.result as string;
-    const rows = text.split('\n').slice(1); // Skip header
-    const importedData: Partial<DataPoint>[] = rows.map(row => {
-      const [series, value, timestamp] = row.split(',');
-      return { series, value: parseFloat(value), timestamp: new Date(timestamp).getTime() };
-    });
-    onImport(importedData);
-  };
-  reader.readAsText(file);
+  saveAs(blob, 'tracer-data.csv');
 }
 
 const AppHeader: React.FC = () => {
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [isImportCsvOpen, setIsImportCsvOpen] = useState(false);
   const navigate = useNavigate();
-  const { dataPoints, addDataPoint } = useDataStore();
+  const { series, dataPoints, importBackup } = useDataStore();
 
-  const handleImport = async () => {
+  const handleImportCsv = async () => {
     const file = await chooseFile('.csv');
     if (file) {
-      importDataFromCSV(file, async (importedData) => {
-        for (const { series, value, timestamp } of importedData) {
-          if (series && value && timestamp) {
-            await addDataPoint({ series, value, timestamp });
-          }
-        }
-      });
+      setImportFile(file);
+      setIsImportCsvOpen(true);
+    }
+  };
+
+  const handleExportBackup = () => {
+    const backup = buildBackup(series, dataPoints);
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json;charset=utf-8;' });
+    saveAs(blob, 'tracer-backup.json');
+  };
+
+  const handleImportBackup = async () => {
+    const file = await chooseFile('.json');
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const backup = parseBackup(text);
+      await importBackup(backup);
+      toast.success('Backup restored successfully!');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to import backup.');
+      console.error('Failed to import backup:', error);
     }
   };
 
   return (
     <>
-      <header className="w-full bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 shadow-sm sticky top-0 z-30 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4 cursor-pointer select-none" onClick={() => navigate('/')}> 
-            <img src={logo} alt="Tracer Logo" className="w-10 h-10" />
+      <header className="w-full bg-card/95 border-b border-border sticky top-0 z-30 backdrop-blur-md">
+        <div className="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
+          <div className="flex items-center gap-3 cursor-pointer select-none" onClick={() => navigate('/')}>
+            <img src={logo} alt="Tracer Logo" className="w-8 h-8" />
             <div>
-              <h1 className="text-2xl font-bold leading-tight">Tracer</h1>
-              <p className="text-sm text-muted-foreground">Track and visualize your series data</p>
+              <h1 className="font-display text-xl font-semibold leading-tight tracking-tight">Tracer</h1>
+              <p className="text-xs text-muted-foreground">Track and visualize your series data</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="rounded-full p-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"><Settings className="w-6 h-6" /></button>
+                <button className="rounded-full p-2 hover:bg-accent transition-colors"><Settings className="w-5 h-5 text-muted-foreground" /></button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setIsAboutOpen(true)}>About</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/settings')}>Settings</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => exportDataAsCSV(dataPoints)}>Export</DropdownMenuItem>
-                <DropdownMenuItem onClick={handleImport}>Import</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => exportDataAsCSV(dataPoints)}>Export CSV</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleImportCsv}>Import CSV...</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleExportBackup}>Export Backup (JSON)</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleImportBackup}>Import Backup (JSON)</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             {/* User menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="rounded-full p-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center">
+                <button className="rounded-full p-2 hover:bg-accent transition-colors flex items-center">
                   {/* User avatar placeholder icon from lucide-react */}
-                  <span className="w-8 h-8 bg-slate-300 dark:bg-slate-700 rounded-full flex items-center justify-center">
-                    <User className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+                  <span className="w-7 h-7 bg-secondary rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-muted-foreground" />
                   </span>
                 </button>
               </DropdownMenuTrigger>
@@ -105,6 +116,7 @@ const AppHeader: React.FC = () => {
         </div>
       </header>
       <AboutDialog isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
+      <ImportCsvDialog file={importFile} open={isImportCsvOpen} onOpenChange={setIsImportCsvOpen} />
     </>
   );
 };

@@ -4,15 +4,27 @@ import { Select, SelectTrigger, SelectContent, SelectItem } from '@/components/u
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useDataStore } from '@/store/dataStore';
 import type { DateRange, SelectRangeEventHandler } from 'react-day-picker';
-import type { DataPoint } from '../services/db';
+import { generateNumericSeries, generateTextSeries, PATTERN_LABELS, type GenerationPattern } from '@/lib/demoData';
 
 interface GenerateDataDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+const NUMERIC_SERIES: Record<string, { baseValue: number; decimals: number }> = {
+  weight: { baseValue: 70, decimals: 1 },
+  sales: { baseValue: 300, decimals: 0 },
+  expenses: { baseValue: 150, decimals: 0 },
+};
+
+const TEXT_SERIES: Record<string, string[]> = {
+  mood: ['Happy', 'Sad', 'Excited', 'Angry', 'Relaxed'],
+  exercise: ['Running', 'Cycling', 'Swimming', 'Yoga', 'Weightlifting'],
+};
 
 const GenerateDataDialog: React.FC<GenerateDataDialogProps> = ({
   open,
@@ -21,7 +33,10 @@ const GenerateDataDialog: React.FC<GenerateDataDialogProps> = ({
   const [selectedSeries, setSelectedSeries] = useState('');
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
   const [frequency, setFrequency] = useState(1);
-  const { addDataPoint } = useDataStore();
+  const [pattern, setPattern] = useState<GenerationPattern>('random');
+  const importPoints = useDataStore((s) => s.importPoints);
+
+  const isNumeric = selectedSeries in NUMERIC_SERIES;
 
   const handleDateChange: SelectRangeEventHandler = (range) => {
     if (range) {
@@ -35,49 +50,32 @@ const GenerateDataDialog: React.FC<GenerateDataDialogProps> = ({
       return;
     }
 
-    const data: Omit<DataPoint, "id">[] = [];
-    const startDate = new Date(dateRange.from);
-    const endDate = new Date(dateRange.to);
-    const days = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
-    const totalEntries = Math.round(days * frequency);
-    const possibleMoods = ['Happy', 'Sad', 'Excited', 'Angry', 'Relaxed'];
-    const possibleExercises = ['Running', 'Cycling', 'Swimming', 'Yoga', 'Weightlifting'];
+    const skipProbability = frequency < 1 ? 1 - frequency : 0;
+    const pointsPerDay = Math.max(1, Math.round(frequency));
 
-    for (let i = 0; i < totalEntries; i++) {
-      const date = new Date(startDate.getTime() + (i * (1000 * 60 * 60 * 24)) / frequency);
-      let value;
-
-      switch (selectedSeries) {
-        case 'weight':
-          value = parseFloat((Math.random() * 20 + 60).toFixed(1));
-          break;
-        case 'sales':
-          value = Math.floor(Math.random() * 500 + 100);
-          break;
-        case 'expenses':
-          value = Math.floor(Math.random() * 200 + 50);
-          break;
-        case 'mood':
-          value = possibleMoods[Math.floor(Math.random() * possibleMoods.length)];
-          break;
-        case 'exercise':
-          value = possibleExercises[Math.floor(Math.random() * possibleExercises.length)];
-          break;
-        default:
-          value = 0;
-      }
-
-      data.push({
-        series: selectedSeries,
-        value,
-        timestamp: date.getTime(),
-      });
-    }
+    const points = isNumeric
+      ? generateNumericSeries({
+          series: selectedSeries,
+          startDate: dateRange.from,
+          endDate: dateRange.to,
+          pattern,
+          baseValue: NUMERIC_SERIES[selectedSeries].baseValue,
+          noiseAmplitude: NUMERIC_SERIES[selectedSeries].baseValue * 0.15,
+          decimals: NUMERIC_SERIES[selectedSeries].decimals,
+          skipProbability,
+          pointsPerDay,
+        })
+      : generateTextSeries(
+          selectedSeries,
+          dateRange.from,
+          dateRange.to,
+          TEXT_SERIES[selectedSeries],
+          TEXT_SERIES[selectedSeries].map(() => 1),
+          skipProbability
+        );
 
     try {
-      for (const { series, value, timestamp } of data) {
-        await addDataPoint({ series, value, timestamp });
-      }
+      await importPoints(points);
       toast.success('Dummy data generated successfully!');
       onOpenChange(false);
     } catch (error) {
@@ -103,11 +101,24 @@ const GenerateDataDialog: React.FC<GenerateDataDialogProps> = ({
             </SelectContent>
           </Select>
         </div>
+        {isNumeric && (
+          <div className="mb-4">
+            <Label className="text-sm font-medium text-muted-foreground mb-1.5 block">Pattern</Label>
+            <Select value={pattern} onValueChange={(v) => setPattern(v as GenerationPattern)}>
+              <SelectTrigger className="w-full">{PATTERN_LABELS[pattern]}</SelectTrigger>
+              <SelectContent>
+                {(Object.keys(PATTERN_LABELS) as GenerationPattern[]).map((p) => (
+                  <SelectItem key={p} value={p}>{PATTERN_LABELS[p]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <div className="mb-4">
           <DateRangePicker selectedDate={dateRange} onDateChange={handleDateChange} />
         </div>
         <div className="mb-4">
-          <label htmlFor="frequency-slider" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="frequency-slider" className="block text-sm font-medium text-muted-foreground">
             Frequency (per day)
           </label>
           <Slider
@@ -119,7 +130,7 @@ const GenerateDataDialog: React.FC<GenerateDataDialogProps> = ({
             step={0.1}
             className="mt-2"
           />
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             {frequency === 1
               ? 'Once per day'
               : frequency < 1
